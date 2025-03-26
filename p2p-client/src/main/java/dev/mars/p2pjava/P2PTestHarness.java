@@ -25,7 +25,7 @@ Implements an actual download instead of just simulation
 public class P2PTestHarness {
 
     // ports and paths configurable
-    private static final int TRACKER_PORT = Integer.getInteger("tracker.port", 6000);
+    private static final int TRACKER_SERVER_PORT = Integer.getInteger("tracker.port", 6000);
     private static final int INDEX_SERVER_PORT = Integer.getInteger("index.port", 6001);
     private static final String TEST_FILES_DIR = System.getProperty("test.files.dir", "files");
 
@@ -117,9 +117,9 @@ public class P2PTestHarness {
 
 
     private static void startTracker() {
-        try (ServerSocket serverSocket = new ServerSocket(TRACKER_PORT)) {
+        try (ServerSocket serverSocket = new ServerSocket(TRACKER_SERVER_PORT)) {
             serverSocket.setSoTimeout(1000); // Timeout for accept
-            System.out.println("Tracker started on port " + TRACKER_PORT);
+            System.out.println("Tracker started on port " + TRACKER_SERVER_PORT);
             trackerStarted.countDown();
 
             while (running && !Thread.currentThread().isInterrupted()) {
@@ -239,7 +239,7 @@ public class P2PTestHarness {
 
         // Verify at least one peer is "peer1" as expected
         boolean foundPeer1 = peers.stream()
-                                .anyMatch(peer -> "peer1".equals(peer.getPeerId()));
+                .anyMatch(peer -> "peer1".equals(peer.getPeerId()));
 
         if (!foundPeer1) {
             System.err.println("File discovery verification failed: peer1 not found");

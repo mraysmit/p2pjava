@@ -1,0 +1,14 @@
+FROM openjdk:17-slim
+
+WORKDIR /app
+COPY target/*.jar app.jar
+
+ENV TRACKER_HOST=0.0.0.0
+ENV TRACKER_PORT=6000
+
+EXPOSE 6000
+
+ENTRYPOINT ["java", "-cp", "app.jar", \
+           "-Dtracker.host=${TRACKER_HOST}", \
+           "-Dtracker.port=${TRACKER_PORT}", \
+           "dev.mars.p2pjava.TrackerService"]

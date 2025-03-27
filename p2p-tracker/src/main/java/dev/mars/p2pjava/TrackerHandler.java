@@ -2,33 +2,50 @@ package dev.mars.p2pjava;
 
 import java.io.*;
 import java.net.*;
+import java.util.*;
+import java.util.concurrent.*;
 
-public class TrackerHandler implements Runnable {
-    private Socket socket;
+class TrackerHandler implements Runnable {
+    private static final Map<String, PeerInfo> peers = new ConcurrentHashMap<>();
+    private final Socket clientSocket;
 
-    public TrackerHandler(Socket socket) {
-        this.socket = socket;
+    public TrackerHandler(Socket clientSocket) {
+        this.clientSocket = clientSocket;
     }
 
     @Override
     public void run() {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+        try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 
-            String request = in.readLine();
-            if (request.startsWith("REGISTER")) {
-                String[] parts = request.split(" ");
-                String peerId = parts[1];
-                String address = socket.getInetAddress().getHostAddress();
-                int port = Integer.parseInt(parts[2]);
-                PeerInfo peerInfo = new PeerInfo(peerId, address, port);
-                Tracker.registerPeer(peerInfo);
-                out.println("Peer registered: " + peerInfo);
-            } else if (request.equals("GET_PEERS")) {
-                out.println(Tracker.getPeers());
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                String[] parts = inputLine.split(" ");
+                String command = parts[0];
+
+                switch (command) {
+                    case "REGISTER":
+                        String peerId = parts[1];
+                        int port = Integer.parseInt(parts[2]);
+                        peers.put(peerId, new PeerInfo(peerId, clientSocket.getInetAddress().getHostAddress(), port));
+                        out.println("REGISTERED " + peerId);
+                        break;
+                    case "DISCOVER":
+                        out.println("PEERS " + peers.values());
+                        break;
+                    default:
+                        out.println("UNKNOWN_COMMAND");
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
+

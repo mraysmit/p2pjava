@@ -2,28 +2,31 @@ package dev.mars.p2pjava;
 
 import java.io.*;
 import java.net.*;
-import java.util.*;
+import java.util.concurrent.*;
 
 public class Tracker {
-    private static Map<String, PeerInfo> peers = new HashMap<>();
+    private static final int TRACKER_PORT = 6000;
+    private static final int THREAD_POOL_SIZE = 10;
 
-    public static void main(String[] args) {
-        try (ServerSocket serverSocket = new ServerSocket(6000)) {
-            System.out.println("Tracker is running on port 6000");
+    public static void startTracker() {
+        ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+
+        try (ServerSocket serverSocket = new ServerSocket(TRACKER_PORT)) {
+            System.out.println("Tracker started on port " + TRACKER_PORT);
+
             while (true) {
-                Socket socket = serverSocket.accept();
-                new Thread(new TrackerHandler(socket)).start();
+                Socket clientSocket = serverSocket.accept();
+                threadPool.submit(new TrackerHandler(clientSocket));
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            threadPool.shutdown();
         }
     }
 
-    public static synchronized void registerPeer(PeerInfo peerInfo) {
-        peers.put(peerInfo.getPeerId(), peerInfo);
-    }
-
-    public static synchronized Map<String, PeerInfo> getPeers() {
-        return peers;
+    public static void main(String[] args) {
+        startTracker();
     }
 }
+

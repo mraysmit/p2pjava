@@ -1,0 +1,23 @@
+FROM openjdk:17-slim
+
+WORKDIR /app
+COPY target/*.jar app.jar
+
+ENV PEER_ID=peer
+ENV PEER_PORT=8000
+ENV TRACKER_HOST=tracker
+ENV TRACKER_PORT=6000
+ENV INDEX_HOST=indexserver
+ENV INDEX_PORT=6001
+ENV SHARED_DIR=/app/files
+
+RUN mkdir -p /app/files
+
+EXPOSE 8000
+
+ENTRYPOINT ["java", "-cp", "app.jar", \
+           "-Dtracker.host=${TRACKER_HOST}", \
+           "-Dtracker.port=${TRACKER_PORT}", \
+           "-Dindex.host=${INDEX_HOST}", \
+           "-Dindex.port=${INDEX_PORT}", \
+           "dev.mars.p2pjava.PeerService"]

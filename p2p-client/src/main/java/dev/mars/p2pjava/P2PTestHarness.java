@@ -24,201 +24,205 @@ Implements an actual download instead of just simulation
 
 public class P2PTestHarness {
 
-    // ports and paths configurable
-    private static final int TRACKER_SERVER_PORT = Integer.getInteger("tracker.port", 6000);
-    private static final int INDEX_SERVER_PORT = Integer.getInteger("index.port", 6001);
-    private static final String TEST_FILES_DIR = System.getProperty("test.files.dir", "files");
+// ports and paths configurable
+private static final String TRACKER_SERVER_HOST = System.getProperty("tracker.host", "localhost");
+private static final int TRACKER_SERVER_PORT = Integer.getInteger("tracker.port", 6000);
+private static final String INDEX_SERVER_HOST = System.getProperty("index.host", "localhost");
+private static final int INDEX_SERVER_PORT = Integer.getInteger("index.port", 6001);
+private static final String TEST_FILES_DIR = System.getProperty("test.files.dir", "files");
 
-    // shutdown mechanism
-    private static volatile boolean running = true;
+// shutdown mechanism
+private static volatile boolean running = true;
 
-    // CountDownLatch to ensure services are ready
-    private static final CountDownLatch trackerStarted = new CountDownLatch(1);
-    private static final CountDownLatch indexServerStarted = new CountDownLatch(1);
+// CountDownLatch to ensure services are ready
+private static final CountDownLatch trackerStarted = new CountDownLatch(1);
+private static final CountDownLatch indexServerStarted = new CountDownLatch(1);
 
-    // CountDownLatch to ensure peers are registered
-    private static final CountDownLatch peersRegistered = new CountDownLatch(2);
+// CountDownLatch to ensure peers are registered
+private static final CountDownLatch peersRegistered = new CountDownLatch(2);
 
-    // Test results tracking
-    private static final List<String> testFailures = new ArrayList<>();
+// Test results tracking
+private static final List<String> testFailures = new ArrayList<>();
 
 
-    public static void main(String[] args) throws Exception {
+public static void main(String[] args) throws Exception {
 
-        // Create thread pool
-        ExecutorService executorService = Executors.newCachedThreadPool();
+    // Create thread pool
+    ExecutorService executorService = Executors.newCachedThreadPool();
 
-        try {
-            // Create test directories and files
-            createTestFiles();
+    try {
+        // Create test directories and files
+        createTestFiles();
 
-            // Start tracker and index server
-            // Start tracker and index server
-            executorService.submit(() -> startTracker());
-            executorService.submit(() -> startIndexServer());
+        // Start tracker and index server
+        // Start tracker and index server
+        executorService.submit(() -> startTracker(TRACKER_SERVER_HOST, TRACKER_SERVER_PORT));
+        executorService.submit(() -> startIndexServer(INDEX_SERVER_HOST, INDEX_SERVER_PORT));
 
-            // Wait for services to start with timeout
-            if (!trackerStarted.await(5, TimeUnit.SECONDS) || !indexServerStarted.await(5, TimeUnit.SECONDS)) {
-                throw new TimeoutException("Services failed to start within timeout period");
-            }
-            System.out.println("Services started successfully");
+        // Wait for services to start with timeout
+        if (!trackerStarted.await(5, TimeUnit.SECONDS) || !indexServerStarted.await(5, TimeUnit.SECONDS)) {
+            throw new TimeoutException("Services failed to start within timeout period");
+        }
+        System.out.println("Services started successfully");
 
-            // Start peers
-            executorService.submit(() -> startPeer("peer1", 8001, TEST_FILES_DIR + "/peer1"));
-            executorService.submit(() -> startPeer("peer2", 8002, TEST_FILES_DIR + "/peer2"));
+        // Start peers
+        executorService.submit(() -> startPeer("peer1", "localhost",8001, TEST_FILES_DIR + "/peer1/file1.txt", TEST_FILES_DIR + "/peer1/file2.txt"));
+        executorService.submit(() -> startPeer("peer2","localhost", 8002, TEST_FILES_DIR + "/peer2"));
 
-            // Wait for peers to register
-            if (!peersRegistered.await(5, TimeUnit.SECONDS)) {
-                throw new TimeoutException("Peer registration timed out");
-            }
+        // Wait for peers to register
+        if (!peersRegistered.await(5, TimeUnit.SECONDS)) {
+            throw new TimeoutException("Peer registration timed out");
+        }
 
-            // Test file discovery
-            List<PeerInfo> peers = discoverPeersWithFile("file1.txt");
-            if (!verifyFileDiscovery(peers)) {
-                testFailures.add("File discovery verification failed");
-            }
+        // Test file discovery
+        List<PeerInfo> peers = discoverPeersWithFile("file1.txt");
+        if (!verifyFileDiscovery(peers)) {
+            testFailures.add("File discovery verification failed");
+        }
 
-            // Test file download if peers are available
-            if (!peers.isEmpty()) {
-                downloadFileFromPeer("file1.txt", peers.get(0));
-            }
+        // Test file download if peers are available
+        if (!peers.isEmpty()) {
+            downloadFileFromPeer("file1.txt", peers.get(0));
+        }
 
-            if (testFailures.isEmpty()) {
-                System.out.println("Test completed successfully");
-            } else {
-                System.err.println("Tests failed: " + String.join(", ", testFailures));
-            }
+        if (testFailures.isEmpty()) {
+            System.out.println("Test completed successfully");
+        } else {
+            System.err.println("Tests failed: " + String.join(", ", testFailures));
+        }
 
-            // Simulate file discovery and download
-            //simulateFileDiscoveryAndDownload();
+        // Simulate file discovery and download
+        //simulateFileDiscoveryAndDownload();
 
-        } catch (IOException e) {
-            System.err.println("Test harness failed: " + e.getMessage());
-            e.printStackTrace();
+    } catch (IOException e) {
+        System.err.println("Test harness failed: " + e.getMessage());
+        e.printStackTrace();
 
-        } catch (InterruptedException e) {
-            System.err.println("Test harness failed: " + e.getMessage());
-            e.printStackTrace();
+    } catch (InterruptedException e) {
+        System.err.println("Test harness failed: " + e.getMessage());
+        e.printStackTrace();
 
-        } finally {
-            // Clean up
-            running = false;
-            executorService.shutdown();
-            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                System.err.println("Executor service did not terminate gracefully");
-            }
+    } finally {
+        // Clean up
+        running = false;
+        executorService.shutdown();
+        if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
+            System.err.println("Executor service did not terminate gracefully");
+        }
 
-            // Optional cleanup
-            if (Boolean.getBoolean("test.cleanup")) {
-                cleanupTestFiles();
-            }
+        // Optional cleanup
+        if (Boolean.getBoolean("test.cleanup")) {
+            cleanupTestFiles();
         }
     }
+}
 
 
-    private static void startTracker() {
-        try (ServerSocket serverSocket = new ServerSocket(TRACKER_SERVER_PORT)) {
-            serverSocket.setSoTimeout(1000); // Timeout for accept
-            System.out.println("Tracker started on port " + TRACKER_SERVER_PORT);
-            trackerStarted.countDown();
+private static void startTracker(String trackerServerHost, int trackerServerPort) {
+    try (ServerSocket serverSocket = new ServerSocket(trackerServerPort, 50, InetAddress.getByName(trackerServerHost))) {
+        serverSocket.setSoTimeout(1000); // Timeout for accept
+        System.out.println("Tracker started on " + trackerServerPort + ":" + trackerServerHost);
+        trackerStarted.countDown();
 
-            while (running && !Thread.currentThread().isInterrupted()) {
-                try {
-                    Socket socket = serverSocket.accept();
-                    new Thread(new TrackerHandler(socket)).start();
-                } catch (SocketTimeoutException e) {
-                    // Expected, just continue loop
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Tracker error: " + e.getMessage());
-        }
-    }
-
-    private static void startIndexServer() {
-        try (ServerSocket serverSocket = new ServerSocket(INDEX_SERVER_PORT)) {
-            serverSocket.setSoTimeout(1000); // Timeout for accept
-            System.out.println("IndexServer started on port " + INDEX_SERVER_PORT);
-            indexServerStarted.countDown();
-
-            while (running && !Thread.currentThread().isInterrupted()) {
-                try {
-                    Socket socket = serverSocket.accept();
-                    new Thread(new IndexServerHandler(socket)).start();
-                } catch (SocketTimeoutException e) {
-                    // Expected, just continue loop
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("IndexServer error: " + e.getMessage());
-        }
-    }
-
-
-    private static void startPeer(String peerId, int port, String directory) {
-        new Thread(() -> {
+        while (running && !Thread.currentThread().isInterrupted()) {
             try {
-                Peer peer = new Peer(peerId, port);
-
-                // Register files in directory
-                Files.list(Paths.get(directory)).forEach(file -> {
-                    String fileName = file.getFileName().toString();
-                    peer.addSharedFile(fileName);
-                    registerFileWithIndexServer(fileName, peerId, port);
-                });
-
-                peer.registerWithTracker();
-                peer.start();
-            } catch (Exception e) {
-                e.printStackTrace();
+                Socket socket = serverSocket.accept();
+                new Thread(new TrackerHandler(socket)).start();
+            } catch (SocketTimeoutException e) {
+                // Expected, just continue loop
             }
-        }).start();
+        }
+    } catch (IOException e) {
+        System.err.println("Tracker error: " + e.getMessage());
     }
+}
 
-    private static void registerFileWithIndexServer(String fileName, String peerId, int port) {
-        try (Socket socket = new Socket("localhost", INDEX_SERVER_PORT);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+private static void startIndexServer(String indexServerHost, int indexServerPort) {
+    try (ServerSocket serverSocket = new ServerSocket(indexServerPort, 50, InetAddress.getByName(indexServerHost))) {
+        serverSocket.setSoTimeout(1000); // Timeout for accept
+        System.out.println("IndexServer started on port " + indexServerPort + ":" + indexServerHost);
+        indexServerStarted.countDown();
 
-            out.println("REGISTER_FILE " + fileName + " " + peerId + " " + port);
-            String response = in.readLine();
-            System.out.println("IndexServer response: " + response);
-        } catch (IOException e) {
+        while (running && !Thread.currentThread().isInterrupted()) {
+            try {
+                Socket socket = serverSocket.accept();
+                new Thread(new IndexServerHandler(socket)).start();
+            } catch (SocketTimeoutException e) {
+                // Expected, just continue loop
+            }
+        }
+    } catch (IOException e) {
+        System.err.println("IndexServer error: " + e.getMessage());
+    }
+}
+
+public static void startPeer(String peerId, String peerHost, int peerPort, String... fileNames) {
+    new Thread(() -> {
+        try {
+            // Create the peer instance
+            Peer peer = new Peer(peerId, peerHost, peerPort);
+
+            // Add shared files
+            for (String fileName : fileNames) {
+                peer.addSharedFile(fileName);
+                registerFileWithIndexServer(fileName, peerId, peerPort);
+            }
+
+            // Register with tracker and start the peer
+            peer.registerWithTracker();
+            peer.start();
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }).start();
+}
+
+private static void registerFileWithIndexServer(String fileName, String peerId, int port) {
+    String indexHost = System.getProperty("index.host", "localhost");
+    int indexPort = Integer.getInteger("index.port", 6001);
+    try (Socket socket = new Socket(indexHost, indexPort);
+         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+        out.println("REGISTER_FILE " + fileName + " " + peerId + " " + port);
+        String response = in.readLine();
+        System.out.println("IndexServer response: " + response);
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+}
 
-    // Discover peers that have the specified file
-    private static List<PeerInfo> discoverPeersWithFile(String fileName) {
-        List<PeerInfo> result = new ArrayList<>();
-        try (Socket socket = new Socket("localhost", INDEX_SERVER_PORT);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+// Discover peers that have the specified file
+private static List<PeerInfo> discoverPeersWithFile(String fileName) {
+    List<PeerInfo> result = new ArrayList<>();
+    try (Socket socket = new Socket("localhost", INDEX_SERVER_PORT);
+         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            out.println("GET_PEERS_WITH_FILE " + fileName);
-            String response = in.readLine();
-            System.out.println("Peers with " + fileName + ": " + response);
+        out.println("GET_PEERS_WITH_FILE " + fileName);
+        String response = in.readLine();
+        System.out.println("Peers with " + fileName + ": " + response);
 
-            // Parse response string into PeerInfo objects
-            // Expected format: [PeerInfo{peerId='peer1', address='127.0.0.1', port=8001}, ...]
-            if (response != null && response.startsWith("[") && response.endsWith("]")) {
-                String[] peerStrings = response.substring(1, response.length() - 1).split(", ");
-                for (String peerString : peerStrings) {
-                    // Simple parsing - in production you would use a proper serialization mechanism
-                    if (peerString.contains("peerId=") && peerString.contains("address=") && peerString.contains("port=")) {
-                        String peerId = extractValue(peerString, "peerId=");
-                        String address = extractValue(peerString, "address=");
-                        int port = Integer.parseInt(extractValue(peerString, "port="));
-                        result.add(new PeerInfo(peerId, address, port));
-                    }
+        // Parse response string into PeerInfo objects
+        // Expected format: [PeerInfo{peerId='peer1', address='127.0.0.1', port=8001}, ...]
+        if (response != null && response.startsWith("[") && response.endsWith("]")) {
+            String[] peerStrings = response.substring(1, response.length() - 1).split(", ");
+            for (String peerString : peerStrings) {
+                // Simple parsing - in production you would use a proper serialization mechanism
+                if (peerString.contains("peerId=") && peerString.contains("address=") && peerString.contains("port=")) {
+                    String peerId = extractValue(peerString, "peerId=");
+                    String address = extractValue(peerString, "address=");
+                    int port = Integer.parseInt(extractValue(peerString, "port="));
+                    result.add(new PeerInfo(peerId, address, port));
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Error discovering peers: " + e.getMessage());
-            testFailures.add("Failed to discover peers: " + e.getMessage());
         }
-        return result;
+    } catch (IOException e) {
+        System.err.println("Error discovering peers: " + e.getMessage());
+        testFailures.add("Failed to discover peers: " + e.getMessage());
     }
+    return result;
+}
 
     // Helper to extract values from peer string representation
     private static String extractValue(String peerString, String prefix) {

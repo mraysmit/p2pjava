@@ -1,0 +1,18 @@
+FROM openjdk:17-slim
+
+WORKDIR /app
+COPY target/*.jar app.jar
+
+ENV INDEX_HOST=0.0.0.0
+ENV INDEX_PORT=6001
+ENV TRACKER_HOST=tracker
+ENV TRACKER_PORT=6000
+
+EXPOSE 6001
+
+ENTRYPOINT ["java", "-cp", "app.jar", \
+           "-Dindex.host=${INDEX_HOST}", \
+           "-Dindex.port=${INDEX_PORT}", \
+           "-Dtracker.host=${TRACKER_HOST}", \
+           "-Dtracker.port=${TRACKER_PORT}", \
+           "dev.mars.p2pjava.IndexService"]

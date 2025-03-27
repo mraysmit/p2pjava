@@ -118,7 +118,7 @@ public static void main(String[] args) throws Exception {
 }
 
 
-private static void startTracker(String trackerServerHost, int trackerServerPort) {
+static void startTracker(String trackerServerHost, int trackerServerPort) {
     try (ServerSocket serverSocket = new ServerSocket(trackerServerPort, 50, InetAddress.getByName(trackerServerHost))) {
         serverSocket.setSoTimeout(1000); // Timeout for accept
         System.out.println("Tracker started on " + trackerServerPort + ":" + trackerServerHost);
@@ -137,7 +137,7 @@ private static void startTracker(String trackerServerHost, int trackerServerPort
     }
 }
 
-private static void startIndexServer(String indexServerHost, int indexServerPort) {
+static void startIndexServer(String indexServerHost, int indexServerPort) {
     try (ServerSocket serverSocket = new ServerSocket(indexServerPort, 50, InetAddress.getByName(indexServerHost))) {
         serverSocket.setSoTimeout(1000); // Timeout for accept
         System.out.println("IndexServer started on port " + indexServerPort + ":" + indexServerHost);

@@ -66,8 +66,8 @@ public static void main(String[] args) throws Exception {
         System.out.println("Services started successfully");
 
         // Start peers
-        executorService.submit(() -> startPeer("peer1", "localhost",8001, TEST_FILES_DIR + "/peer1/file1.txt", TEST_FILES_DIR + "/peer1/file2.txt"));
-        executorService.submit(() -> startPeer("peer2","localhost", 8002, TEST_FILES_DIR + "/peer2"));
+        executorService.submit(() -> startPeer("peer1", "localhost",8001, TRACKER_SERVER_HOST, TRACKER_SERVER_PORT, TEST_FILES_DIR + "/peer1/file1.txt", TEST_FILES_DIR + "/peer1/file2.txt"));
+        executorService.submit(() -> startPeer("peer2","localhost", 8002, TRACKER_SERVER_HOST, TRACKER_SERVER_PORT,TEST_FILES_DIR + "/peer2/file3.txt", TEST_FILES_DIR + "/peer2/file4.txt"));
 
         // Wait for peers to register
         if (!peersRegistered.await(5, TimeUnit.SECONDS)) {
@@ -156,22 +156,44 @@ static void startIndexServer(String indexServerHost, int indexServerPort) {
     }
 }
 
-public static void startPeer(String peerId, String peerHost, int peerPort, String... fileNames) {
+/**
+ * Starts a peer with specified files in a separate thread
+ * @param peerId The unique identifier for the peer
+ * @param peerHost The host on which the peer will listen
+ * @param peerPort The port on which the peer will listen
+ * @param filePaths Array of file paths this peer will share
+ */
+public static void startPeer(String peerId, String peerHost, int peerPort, String trackerHost, int trackerPort, String... filePaths) {
     new Thread(() -> {
         try {
             // Create the peer instance
-            Peer peer = new Peer(peerId, peerHost, peerPort);
+            Peer peer = new Peer(peerId, peerHost, peerPort, trackerHost, trackerPort);
+            System.out.println("Starting peer: " + peerId + " on port " + peerPort);
 
             // Add shared files
-            for (String fileName : fileNames) {
-                peer.addSharedFile(fileName);
+            for (String filePath : filePaths) {
+                // Extract just the filename from the path
+                Path path = Paths.get(filePath);
+                String fileName = path.getFileName().toString();
+
+                // Add to peer's shared files
+                peer.addSharedFile(filePath);
+                System.out.println("Added shared file: " + filePath + " to peer " + peerId);
+
+                // Register with index server using just the filename
                 registerFileWithIndexServer(fileName, peerId, peerPort);
             }
 
             // Register with tracker and start the peer
             peer.registerWithTracker();
+
+            // Signal that this peer has registered successfully
+            peersRegistered.countDown();
+
+            // This will block in an infinite loop
             peer.start();
         } catch (Exception e) {
+            System.err.println("Error starting peer " + peerId + ": " + e.getMessage());
             e.printStackTrace();
         }
     }).start();

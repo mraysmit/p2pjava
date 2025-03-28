@@ -15,10 +15,15 @@ This P2P system consists of three main components that work together:
    - Handles file registration and lookup requests
 
 3. **Peers** (Client components)
+   - Creates peer instances with the specified ID and port
+   - Adds shared files to each peer
+   - Registers those files with the index server
+   - Starts each peer in its own thread
    - Register themselves with the Tracker
    - Register their files with the IndexServer
    - Query the IndexServer to find files
    - Connect directly to other peers to transfer files
+
 
 ## How They Work Together
 

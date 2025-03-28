@@ -1,6 +1,6 @@
 package dev.mars.p2pjava;
 
-class PeerInfo {
+public class PeerInfo {
     private final String peerId;
     private final String address;
     private final int port;
@@ -25,6 +25,10 @@ class PeerInfo {
 
     @Override
     public String toString() {
-        return peerId + " " + address + " " + port;
+        return "PeerInfo{" +
+                "peerId='" + peerId + '\'' +
+                ", address='" + address + '\'' +
+                ", port=" + port +
+                '}';
     }
 }

@@ -19,6 +19,7 @@ class TrackerHandler implements Runnable {
              BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 
             String inputLine;
+
             while ((inputLine = in.readLine()) != null) {
                 String[] parts = inputLine.split(" ");
                 String command = parts[0];

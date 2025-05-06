@@ -3,6 +3,8 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/p2p-client/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/p2p-client/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/p2p-common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/p2p-common/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/p2p-indexserver/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/p2p-indexserver/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/p2p-peer/src/main/java" charset="UTF-8" />

@@ -1,0 +1,564 @@
+[2025-03-30 16:37:26] [INFO   ] Created peer testPeer on localhost:9001
+[2025-03-30 16:37:26] [INFO   ] Added shared file: C:\Users\mraysmit\AppData\Local\Temp\junit9848933126672481751\testfile.txt
+[2025-03-30 16:37:26] [INFO   ] Starting peer testPeer on port 9001
+[2025-03-30 16:37:26] [INFO   ] Starting heartbeat service for peer testPeer
+[2025-03-30 16:37:26] [INFO   ] Registering peer testPeer with tracker at localhost:8001
+[2025-03-30 16:37:26] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:37:26] [FINE   ] Heartbeat acknowledged by tracker
+[2025-03-30 16:37:26] [INFO   ] Successfully registered with tracker
+[2025-03-30 16:37:26] [INFO   ] Discovering peers from tracker
+[2025-03-30 16:37:26] [INFO   ] Discovered peers: []
+[2025-03-30 16:37:26] [INFO   ] Server socket bound successfully on port 9001
+[2025-03-30 16:37:26] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 16:37:27] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Received command: INVALID_COMMAND (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:27] [WARNING] Unknown command: INVALID_COMMAND from /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Processing file request for: testfile.txt from /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Attempting to send file: testfile.txt
+[2025-03-30 16:37:27] [FINE   ] Looking for file: testfile.txt in shared files
+[2025-03-30 16:37:27] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit9848933126672481751\testfile.txt
+[2025-03-30 16:37:27] [INFO   ] Sending file: testfile.txt (25 bytes)
+[2025-03-30 16:37:27] [INFO   ] File sent successfully: testfile.txt (25 bytes)
+[2025-03-30 16:37:27] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Processing file request for: nonexistent.txt from /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Attempting to send file: nonexistent.txt
+[2025-03-30 16:37:27] [FINE   ] Looking for file: nonexistent.txt in shared files
+[2025-03-30 16:37:27] [FINE   ] File not found in shared files
+[2025-03-30 16:37:27] [WARNING] File not found: nonexistent.txt
+[2025-03-30 16:37:27] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:27] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:37:27] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:37:27] [INFO   ] Server socket closed
+[2025-03-30 16:37:27] [INFO   ] Socket closed during shutdown
+[2025-03-30 16:37:27] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:37:27] [INFO   ] Peer testPeer server loop exited
+[2025-03-30 16:37:27] [INFO   ] Created peer testPeer on localhost:9002
+[2025-03-30 16:37:27] [INFO   ] Added shared file: C:\Users\mraysmit\AppData\Local\Temp\junit17475102186622793988\concurrent_test.txt
+[2025-03-30 16:37:27] [INFO   ] Starting peer testPeer on port 9002
+[2025-03-30 16:37:27] [INFO   ] Starting heartbeat service for peer testPeer
+[2025-03-30 16:37:27] [INFO   ] Registering peer testPeer with tracker at localhost:8002
+[2025-03-30 16:37:27] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:37:27] [SEVERE ] Failed to register with tracker: Connection refused: connect
+[2025-03-30 16:37:27] [SEVERE ] Failed to send heartbeat for peer testPeer: Connection refused: connect
+[2025-03-30 16:37:27] [INFO   ] Discovering peers from tracker
+[2025-03-30 16:37:27] [SEVERE ] Failed to discover peers: Connection refused: connect
+[2025-03-30 16:37:27] [INFO   ] Server socket bound successfully on port 9002
+[2025-03-30 16:37:27] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 16:37:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:37:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:37:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit17475102186622793988\concurrent_test.txt
+[2025-03-30 16:37:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:37:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit17475102186622793988\concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit17475102186622793988\concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:37:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:37:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit17475102186622793988\concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:37:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit17475102186622793988\concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:37:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:37:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit17475102186622793988\concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit17475102186622793988\concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:37:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit17475102186622793988\concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:37:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:37:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit17475102186622793988\concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:37:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:37:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit17475102186622793988\concurrent_test.txt
+[2025-03-30 16:37:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:37:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:37:28] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:37:28] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:37:28] [INFO   ] Server socket closed
+[2025-03-30 16:37:28] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:37:28] [INFO   ] Socket closed during shutdown
+[2025-03-30 16:37:28] [INFO   ] Peer testPeer server loop exited
+[2025-03-30 16:37:29] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:37:29] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:37:29] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:37:29] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:37:29] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:37:29] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:37:29] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:37:29] [INFO   ] Added shared file: C:\Users\mraysmit\AppData\Local\Temp\junit10673695942182903838\testFile.txt
+[2025-03-30 16:37:29] [INFO   ] Handling connection from NUC10A/192.168.137.29
+[2025-03-30 16:37:29] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from NUC10A/192.168.137.29
+[2025-03-30 16:37:29] [INFO   ] Processing file request for: testFile.txt from NUC10A/192.168.137.29
+[2025-03-30 16:37:29] [INFO   ] Attempting to send file: testFile.txt
+[2025-03-30 16:37:29] [FINE   ] Looking for file: testFile.txt in shared files
+[2025-03-30 16:37:29] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit10673695942182903838\testFile.txt
+[2025-03-30 16:37:29] [INFO   ] Sending file: testFile.txt (17 bytes)
+[2025-03-30 16:37:29] [INFO   ] File sent successfully: testFile.txt (17 bytes)
+[2025-03-30 16:37:29] [INFO   ] Closed connection with NUC10A/192.168.137.29
+[2025-03-30 16:37:29] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:37:29] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:37:29] [INFO   ] Added shared file: C:\Users\mraysmit\AppData\Local\Temp\junit4435063122104815372\testFile.txt
+[2025-03-30 16:37:29] [FINE   ] Looking for file: testFile.txt in shared files
+[2025-03-30 16:37:29] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit4435063122104815372\testFile.txt
+[2025-03-30 16:37:29] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:37:29] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:37:29] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:37:29] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:37:29] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:37:29] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:42:26] [INFO   ] Created peer testPeer on localhost:9001
+[2025-03-30 16:42:26] [INFO   ] Added shared file: C:\Users\mraysmit\AppData\Local\Temp\junit5511651976640523183\testfile.txt
+[2025-03-30 16:42:26] [INFO   ] Starting peer testPeer on port 9001
+[2025-03-30 16:42:26] [INFO   ] Starting heartbeat service for peer testPeer
+[2025-03-30 16:42:26] [INFO   ] Registering peer testPeer with tracker at localhost:8001
+[2025-03-30 16:42:26] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:42:26] [INFO   ] Successfully registered with tracker
+[2025-03-30 16:42:26] [INFO   ] Discovering peers from tracker
+[2025-03-30 16:42:26] [FINE   ] Heartbeat acknowledged by tracker
+[2025-03-30 16:42:26] [INFO   ] Discovered peers: []
+[2025-03-30 16:42:26] [INFO   ] Server socket bound successfully on port 9001
+[2025-03-30 16:42:26] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 16:42:27] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Received command: INVALID_COMMAND (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:27] [WARNING] Unknown command: INVALID_COMMAND from /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Processing file request for: testfile.txt from /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Attempting to send file: testfile.txt
+[2025-03-30 16:42:27] [FINE   ] Looking for file: testfile.txt in shared files
+[2025-03-30 16:42:27] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit5511651976640523183\testfile.txt
+[2025-03-30 16:42:27] [INFO   ] Sending file: testfile.txt (25 bytes)
+[2025-03-30 16:42:27] [INFO   ] File sent successfully: testfile.txt (25 bytes)
+[2025-03-30 16:42:27] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Processing file request for: nonexistent.txt from /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Attempting to send file: nonexistent.txt
+[2025-03-30 16:42:27] [FINE   ] Looking for file: nonexistent.txt in shared files
+[2025-03-30 16:42:27] [FINE   ] File not found in shared files
+[2025-03-30 16:42:27] [WARNING] File not found: nonexistent.txt
+[2025-03-30 16:42:27] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:27] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:42:27] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:42:27] [INFO   ] Server socket closed
+[2025-03-30 16:42:27] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:42:27] [INFO   ] Socket closed during shutdown
+[2025-03-30 16:42:27] [INFO   ] Peer testPeer server loop exited
+[2025-03-30 16:42:27] [INFO   ] Created peer testPeer on localhost:9002
+[2025-03-30 16:42:27] [INFO   ] Added shared file: C:\Users\mraysmit\AppData\Local\Temp\junit7096450921604161112\concurrent_test.txt
+[2025-03-30 16:42:27] [INFO   ] Starting peer testPeer on port 9002
+[2025-03-30 16:42:27] [INFO   ] Starting heartbeat service for peer testPeer
+[2025-03-30 16:42:27] [INFO   ] Registering peer testPeer with tracker at localhost:8002
+[2025-03-30 16:42:27] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:42:27] [SEVERE ] Failed to register with tracker: Connection refused: connect
+[2025-03-30 16:42:27] [SEVERE ] Failed to send heartbeat for peer testPeer: Connection refused: connect
+[2025-03-30 16:42:27] [INFO   ] Discovering peers from tracker
+[2025-03-30 16:42:27] [SEVERE ] Failed to discover peers: Connection refused: connect
+[2025-03-30 16:42:27] [INFO   ] Server socket bound successfully on port 9002
+[2025-03-30 16:42:27] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 16:42:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:42:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:42:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit7096450921604161112\concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit7096450921604161112\concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:42:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit7096450921604161112\concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:42:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:42:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:42:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:42:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit7096450921604161112\concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit7096450921604161112\concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit7096450921604161112\concurrent_test.txt
+[2025-03-30 16:42:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:42:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:42:28] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit7096450921604161112\concurrent_test.txt
+[2025-03-30 16:42:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit7096450921604161112\concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:42:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit7096450921604161112\concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] Processing file request for: concurrent_test.txt from /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] Attempting to send file: concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:28] [FINE   ] Looking for file: concurrent_test.txt in shared files
+[2025-03-30 16:42:28] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit7096450921604161112\concurrent_test.txt
+[2025-03-30 16:42:28] [INFO   ] Sending file: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] File sent successfully: concurrent_test.txt (41 bytes)
+[2025-03-30 16:42:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:28] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:42:28] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:42:28] [INFO   ] Server socket closed
+[2025-03-30 16:42:28] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:42:28] [INFO   ] Socket closed during shutdown
+[2025-03-30 16:42:28] [INFO   ] Peer testPeer server loop exited
+[2025-03-30 16:42:28] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:42:28] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:42:28] [FINE   ] Heartbeat acknowledged by tracker
+[2025-03-30 16:42:28] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:42:28] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:42:28] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:42:28] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:42:28] [INFO   ] Starting peer testPeer on port 9000
+[2025-03-30 16:42:28] [INFO   ] Starting heartbeat service for peer testPeer
+[2025-03-30 16:42:28] [INFO   ] Registering peer testPeer with tracker at localhost:8000
+[2025-03-30 16:42:28] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:42:29] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:42:29] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:42:59] [INFO   ] Forced heartbeat service shutdown
+[2025-03-30 16:42:59] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:42:59] [SEVERE ] Failed to send heartbeat for peer testPeer: Connection reset
+[2025-03-30 16:42:59] [SEVERE ] Failed to register with tracker: Connection reset
+[2025-03-30 16:42:59] [INFO   ] Discovering peers from tracker
+[2025-03-30 16:42:59] [SEVERE ] Failed to discover peers: Connection refused: connect
+[2025-03-30 16:42:59] [INFO   ] Server socket bound successfully on port 9000
+[2025-03-30 16:42:59] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 16:42:59] [INFO   ] Peer testPeer server loop exited
+[2025-03-30 16:42:59] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:42:59] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:42:59] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:42:59] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:42:59] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:42:59] [INFO   ] Added shared file: C:\Users\mraysmit\AppData\Local\Temp\junit15444014720061138613\testFile.txt
+[2025-03-30 16:42:59] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:42:59] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:42:59] [INFO   ] Processing file request for: testFile.txt from /127.0.0.1
+[2025-03-30 16:42:59] [INFO   ] Attempting to send file: testFile.txt
+[2025-03-30 16:42:59] [FINE   ] Looking for file: testFile.txt in shared files
+[2025-03-30 16:42:59] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit15444014720061138613\testFile.txt
+[2025-03-30 16:42:59] [INFO   ] Sending file: testFile.txt (17 bytes)
+[2025-03-30 16:42:59] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:42:59] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:42:59] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:42:59] [SEVERE ] Error sending file: An established connection was aborted by the software in your host machine
+[2025-03-30 16:42:59] [SEVERE ] Failed to send error message: An established connection was aborted by the software in your host machine
+[2025-03-30 16:42:59] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:42:59] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:42:59] [INFO   ] Added shared file: C:\Users\mraysmit\AppData\Local\Temp\junit6864639097376375917\testFile.txt
+[2025-03-30 16:42:59] [FINE   ] Looking for file: testFile.txt in shared files
+[2025-03-30 16:42:59] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit6864639097376375917\testFile.txt
+[2025-03-30 16:42:59] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:42:59] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:42:59] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:42:59] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:42:59] [INFO   ] Starting peer testPeer on port 9000
+[2025-03-30 16:42:59] [INFO   ] Starting heartbeat service for peer testPeer
+[2025-03-30 16:42:59] [INFO   ] Registering peer testPeer with tracker at localhost:8000
+[2025-03-30 16:42:59] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:42:59] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:42:59] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:43:29] [INFO   ] Forced heartbeat service shutdown
+[2025-03-30 16:43:29] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:43:30] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:43:30] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:43:30] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:43:30] [SEVERE ] Failed to send heartbeat for peer testPeer: Connection reset
+[2025-03-30 16:43:30] [SEVERE ] Failed to register with tracker: Connection reset
+[2025-03-30 16:43:30] [INFO   ] Discovering peers from tracker
+[2025-03-30 16:43:30] [SEVERE ] Failed to discover peers: Connection refused: connect
+[2025-03-30 16:43:30] [SEVERE ] Failed to start peer server testPeer: Address already in use: bind
+[2025-03-30 16:43:30] [INFO   ] Peer testPeer server loop exited
+[2025-03-30 16:43:30] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:43:30] [INFO   ] Registering peer testPeer with tracker at localhost:8000
+[2025-03-30 16:43:30] [INFO   ] Successfully registered with tracker
+[2025-03-30 16:43:30] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:43:30] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:43:30] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:47:55] [INFO   ] Created peer testPeer on localhost:9001
+[2025-03-30 16:47:55] [INFO   ] Added shared file: C:\Users\mraysmit\AppData\Local\Temp\junit13215684968676419284\testfile.txt
+[2025-03-30 16:47:55] [INFO   ] Starting peer testPeer on port 9001
+[2025-03-30 16:47:55] [INFO   ] Starting heartbeat service for peer testPeer
+[2025-03-30 16:47:55] [INFO   ] Registering peer testPeer with tracker at localhost:8001
+[2025-03-30 16:47:55] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:47:55] [FINE   ] Heartbeat acknowledged by tracker
+[2025-03-30 16:47:55] [INFO   ] Successfully registered with tracker
+[2025-03-30 16:47:55] [INFO   ] Discovering peers from tracker
+[2025-03-30 16:47:55] [INFO   ] Discovered peers: []
+[2025-03-30 16:47:55] [INFO   ] Server socket bound successfully on port 9001
+[2025-03-30 16:47:55] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 16:47:56] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:47:56] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:47:56] [INFO   ] Received command: INVALID_COMMAND (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:47:56] [WARNING] Unknown command: INVALID_COMMAND from /127.0.0.1
+[2025-03-30 16:47:56] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:47:57] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:47:57] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:47:57] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:47:57] [INFO   ] Processing file request for: testfile.txt from /127.0.0.1
+[2025-03-30 16:47:57] [INFO   ] Attempting to send file: testfile.txt
+[2025-03-30 16:47:57] [FINE   ] Looking for file: testfile.txt in shared files
+[2025-03-30 16:47:57] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit13215684968676419284\testfile.txt
+[2025-03-30 16:47:57] [INFO   ] Sending file: testfile.txt (25 bytes)
+[2025-03-30 16:47:57] [INFO   ] File sent successfully: testfile.txt (25 bytes)
+[2025-03-30 16:47:57] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:47:57] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 16:47:57] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:47:57] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:47:57] [INFO   ] Processing file request for: nonexistent.txt from /127.0.0.1
+[2025-03-30 16:47:57] [INFO   ] Attempting to send file: nonexistent.txt
+[2025-03-30 16:47:57] [FINE   ] Looking for file: nonexistent.txt in shared files
+[2025-03-30 16:47:57] [FINE   ] File not found in shared files
+[2025-03-30 16:47:57] [WARNING] File not found: nonexistent.txt
+[2025-03-30 16:47:57] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:47:57] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:47:57] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:47:57] [INFO   ] Server socket closed
+[2025-03-30 16:47:57] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:47:57] [INFO   ] Socket closed during shutdown
+[2025-03-30 16:47:57] [INFO   ] Peer testPeer server loop exited
+[2025-03-30 16:48:30] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:48:30] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:48:30] [FINE   ] Heartbeat acknowledged by tracker
+[2025-03-30 16:48:30] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:48:30] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:48:30] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:48:30] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:48:30] [INFO   ] Starting peer testPeer on port 9000
+[2025-03-30 16:48:30] [INFO   ] Starting heartbeat service for peer testPeer
+[2025-03-30 16:48:30] [INFO   ] Registering peer testPeer with tracker at localhost:8000
+[2025-03-30 16:48:30] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:48:31] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:48:31] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:49:01] [INFO   ] Forced heartbeat service shutdown
+[2025-03-30 16:49:01] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:49:01] [SEVERE ] Failed to register with tracker: Connection reset
+[2025-03-30 16:49:01] [SEVERE ] Failed to send heartbeat for peer testPeer: Connection reset
+[2025-03-30 16:49:01] [INFO   ] Discovering peers from tracker
+[2025-03-30 16:49:01] [SEVERE ] Failed to discover peers: Connection refused: connect
+[2025-03-30 16:49:01] [INFO   ] Server socket bound successfully on port 9000
+[2025-03-30 16:49:01] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 16:49:01] [INFO   ] Peer testPeer server loop exited
+[2025-03-30 16:49:01] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:49:01] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:49:01] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:49:01] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:49:01] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:49:01] [INFO   ] Added shared file: C:\Users\mraysmit\AppData\Local\Temp\junit3711268644393739392\testFile.txt
+[2025-03-30 16:49:01] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 16:49:01] [INFO   ] Received command: GET_FILE (protocol: PROTOCOL_V1) from /127.0.0.1
+[2025-03-30 16:49:01] [INFO   ] Processing file request for: testFile.txt from /127.0.0.1
+[2025-03-30 16:49:01] [INFO   ] Attempting to send file: testFile.txt
+[2025-03-30 16:49:01] [FINE   ] Looking for file: testFile.txt in shared files
+[2025-03-30 16:49:01] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit3711268644393739392\testFile.txt
+[2025-03-30 16:49:01] [INFO   ] Sending file: testFile.txt (17 bytes)
+[2025-03-30 16:49:01] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:49:01] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:49:01] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:49:01] [SEVERE ] Error sending file: An established connection was aborted by the software in your host machine
+[2025-03-30 16:49:01] [SEVERE ] Failed to send error message: An established connection was aborted by the software in your host machine
+[2025-03-30 16:49:01] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 16:49:01] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:49:01] [INFO   ] Added shared file: C:\Users\mraysmit\AppData\Local\Temp\junit1077078737654382838\testFile.txt
+[2025-03-30 16:49:01] [FINE   ] Looking for file: testFile.txt in shared files
+[2025-03-30 16:49:01] [FINE   ] Found file at path: C:\Users\mraysmit\AppData\Local\Temp\junit1077078737654382838\testFile.txt
+[2025-03-30 16:49:01] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:49:01] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:49:01] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:49:01] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:49:01] [INFO   ] Starting peer testPeer on port 9000
+[2025-03-30 16:49:01] [INFO   ] Starting heartbeat service for peer testPeer
+[2025-03-30 16:49:01] [INFO   ] Registering peer testPeer with tracker at localhost:8000
+[2025-03-30 16:49:01] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:49:01] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:49:01] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:49:31] [INFO   ] Forced heartbeat service shutdown
+[2025-03-30 16:49:31] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:49:32] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:49:32] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:49:32] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:49:32] [SEVERE ] Failed to register with tracker: Connection reset
+[2025-03-30 16:49:32] [SEVERE ] Failed to send heartbeat for peer testPeer: Connection reset
+[2025-03-30 16:49:32] [INFO   ] Discovering peers from tracker
+[2025-03-30 16:49:32] [SEVERE ] Failed to discover peers: Connection refused: connect
+[2025-03-30 16:49:32] [INFO   ] Server socket bound successfully on port 9000
+[2025-03-30 16:49:32] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 16:49:32] [INFO   ] Peer testPeer server loop exited
+[2025-03-30 16:49:32] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:49:32] [INFO   ] Registering peer testPeer with tracker at localhost:8000
+[2025-03-30 16:49:32] [INFO   ] Successfully registered with tracker
+[2025-03-30 16:49:32] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:49:32] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:49:32] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:51:15] [INFO   ] Created peer testPeer on localhost:9000
+[2025-03-30 16:51:15] [INFO   ] Starting peer testPeer on port 9000
+[2025-03-30 16:51:15] [INFO   ] Starting heartbeat service for peer testPeer
+[2025-03-30 16:51:15] [INFO   ] Registering peer testPeer with tracker at localhost:8000
+[2025-03-30 16:51:15] [FINE   ] Sending heartbeat to tracker for peer testPeer
+[2025-03-30 16:51:15] [INFO   ] Stopping peer testPeer
+[2025-03-30 16:51:15] [INFO   ] Stopping heartbeat service for peer testPeer
+[2025-03-30 16:51:45] [INFO   ] Forced heartbeat service shutdown
+[2025-03-30 16:51:45] [INFO   ] Peer testPeer stopped
+[2025-03-30 16:51:45] [SEVERE ] Failed to register with tracker: Connection reset
+[2025-03-30 16:51:45] [SEVERE ] Failed to send heartbeat for peer testPeer: Connection reset
+[2025-03-30 16:51:45] [INFO   ] Discovering peers from tracker
+[2025-03-30 16:51:45] [SEVERE ] Failed to discover peers: Connection refused: connect
+[2025-03-30 16:51:45] [INFO   ] Server socket bound successfully on port 9000
+[2025-03-30 16:51:45] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 16:51:45] [INFO   ] Peer testPeer server loop exited

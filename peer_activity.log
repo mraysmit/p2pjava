@@ -1,0 +1,42 @@
+Mar 30, 2025 3:12:41 PM dev.mars.p2pjava.Peer start
+INFO: Peer peer2 is running on port 8002
+Mar 30, 2025 3:12:41 PM dev.mars.p2pjava.Peer start
+INFO: Peer peer1 is running on port 8001
+Mar 30, 2025 3:12:41 PM dev.mars.p2pjava.Peer handleClientConnection
+SEVERE: Error handling client connection: null
+Mar 30, 2025 3:12:41 PM dev.mars.p2pjava.Peer handleClientConnection
+SEVERE: Error handling client connection: null
+Mar 30, 2025 3:13:50 PM dev.mars.p2pjava.Peer handleClientConnection
+SEVERE: Error handling client connection: null
+Mar 30, 2025 3:14:21 PM dev.mars.p2pjava.Peer start
+INFO: Peer peer1 is running on port 8001
+Mar 30, 2025 3:14:21 PM dev.mars.p2pjava.Peer start
+INFO: Peer peer2 is running on port 8002
+Mar 30, 2025 3:14:21 PM dev.mars.p2pjava.Peer handleClientConnection
+SEVERE: Error handling client connection: null
+Mar 30, 2025 3:14:21 PM dev.mars.p2pjava.Peer handleClientConnection
+SEVERE: Error handling client connection: null
+Mar 30, 2025 3:14:21 PM dev.mars.p2pjava.Peer handleClientConnection
+SEVERE: Error handling client connection: null
+Mar 30, 2025 3:14:21 PM dev.mars.p2pjava.Peer handleClientConnection
+SEVERE: Error handling client connection: null
+Mar 30, 2025 3:15:13 PM dev.mars.p2pjava.Peer start
+INFO: Peer peer1 server loop exited
+Mar 30, 2025 3:15:13 PM dev.mars.p2pjava.Peer start
+INFO: Peer peer2 server loop exited
+Mar 30, 2025 3:15:15 PM dev.mars.p2pjava.Peer start
+INFO: Peer peer1 is running on port 8001
+Mar 30, 2025 3:15:15 PM dev.mars.p2pjava.Peer start
+INFO: Peer peer2 is running on port 8002
+Mar 30, 2025 3:15:15 PM dev.mars.p2pjava.Peer handleClientConnection
+SEVERE: Error handling client connection: null
+Mar 30, 2025 3:15:15 PM dev.mars.p2pjava.Peer handleClientConnection
+SEVERE: Error handling client connection: null
+Mar 30, 2025 3:15:15 PM dev.mars.p2pjava.Peer handleClientConnection
+SEVERE: Error handling client connection: null
+Mar 30, 2025 3:15:15 PM dev.mars.p2pjava.Peer handleClientConnection
+SEVERE: Error handling client connection: null
+Mar 30, 2025 3:20:23 PM dev.mars.p2pjava.Peer start
+INFO: Peer peer1 server loop exited
+Mar 30, 2025 3:20:23 PM dev.mars.p2pjava.Peer start
+INFO: Peer peer2 server loop exited

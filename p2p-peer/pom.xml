@@ -19,6 +19,12 @@
     <dependencies>
         <dependency>
             <groupId>dev.mars</groupId>
+            <artifactId>p2p-common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.mars</groupId>
             <artifactId>p2p-tracker</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
@@ -29,6 +35,21 @@
             <version>5.8.1</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.16.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <version>4.8.0</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

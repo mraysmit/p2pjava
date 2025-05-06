@@ -1,79 +1,140 @@
 package dev.mars.p2pjava;
 
-        import java.io.*;
-        import java.net.Socket;
-        import java.util.*;
-        import java.util.concurrent.ConcurrentHashMap;
+import dev.mars.p2pjava.common.PeerInfo;
 
-        public class IndexServerHandler implements Runnable {
-            // Map filenames to a list of peers that have the file
-            private static final Map<String, List<PeerInfo>> fileMap = new ConcurrentHashMap<>();
-            private final Socket clientSocket;
+import java.io.*;
+import java.net.Socket;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.*;
 
-            public IndexServerHandler(Socket socket) {
-                this.clientSocket = socket;
-            }
+public class IndexServerHandler implements Runnable {
+    private static final Logger logger = Logger.getLogger(IndexServerHandler.class.getName());
+    private final Socket clientSocket;
 
-            @Override
-            public void run() {
-                try (
-                    BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)
-                ) {
-                    String line = in.readLine();
-                    if (line != null) {
-                        processCommand(line, out);
-                    }
-                } catch (IOException e) {
-                    System.err.println("Error in IndexServerHandler: " + e.getMessage());
-                } finally {
-                    try {
-                        clientSocket.close();
-                    } catch (IOException e) {
-                        // Ignore closing errors
-                    }
-                }
-            }
+    public IndexServerHandler(Socket socket) {
+        this.clientSocket = socket;
+    }
 
-            private void processCommand(String command, PrintWriter out) {
-                System.out.println("IndexServer received: " + command);
+    @Override
+    public void run() {
+        logger.info("Handling client connection: " + clientSocket);
 
-                if (command.startsWith("REGISTER_FILE")) {
-                    // Format: REGISTER_FILE filename peerId port
-                    String[] parts = command.split(" ", 4);
-                    if (parts.length == 4) {
+        try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                logger.info("Received: " + inputLine);
+                String[] parts = inputLine.split(" ");
+                String command = parts[0];
+
+                if ("REGISTER_FILE".equals(command)) {
+                    if (parts.length >= 4) {
                         String fileName = parts[1];
                         String peerId = parts[2];
                         int port = Integer.parseInt(parts[3]);
+                        String address = clientSocket.getInetAddress().getHostAddress();
 
-                        registerFile(fileName, peerId, "localhost", port);
+                        PeerInfo peerInfo = new PeerInfo(peerId, address, port);
+                        IndexServer.registerFile(fileName, peerInfo);
+                        // Logging moved to IndexServer.registerFile method
+
                         out.println("FILE_REGISTERED " + fileName);
                     } else {
-                        out.println("ERROR Invalid REGISTER_FILE format");
+                        logger.warning("Invalid REGISTER_FILE command: " + inputLine);
+                        out.println("ERROR Invalid REGISTER_FILE command");
                     }
-                } else if (command.startsWith("GET_PEERS_WITH_FILE")) {
-                    // Format: GET_PEERS_WITH_FILE filename
-                    String[] parts = command.split(" ", 2);
-                    if (parts.length == 2) {
+                }
+                else if ("DEREGISTER_FILE".equals(command)) {
+                    if (parts.length >= 4) {
                         String fileName = parts[1];
-                        List<PeerInfo> peers = getPeersWithFile(fileName);
-                        out.println(peers.toString());
+                        String peerId = parts[2];
+                        int port = Integer.parseInt(parts[3]);
+                        String address = clientSocket.getInetAddress().getHostAddress();
+
+                        PeerInfo peerInfo = new PeerInfo(peerId, address, port);
+                        boolean success = IndexServer.deregisterFile(fileName, peerInfo);
+
+                        if (success) {
+                            out.println("FILE_DEREGISTERED " + fileName);
+                        } else {
+                            out.println("ERROR Failed to deregister file");
+                        }
                     } else {
-                        out.println("ERROR Invalid GET_PEERS_WITH_FILE format");
+                        logger.warning("Invalid DEREGISTER_FILE command: " + inputLine);
+                        out.println("ERROR Invalid DEREGISTER_FILE command");
                     }
-                } else {
-                    out.println("ERROR Unknown command");
+                }
+                else if ("DEREGISTER_PEER".equals(command)) {
+                    if (parts.length >= 3) {
+                        String peerId = parts[1];
+                        int port = Integer.parseInt(parts[2]);
+                        String address = clientSocket.getInetAddress().getHostAddress();
+
+                        PeerInfo peerInfo = new PeerInfo(peerId, address, port);
+                        boolean success = IndexServer.deregisterPeer(peerInfo);
+
+                        if (success) {
+                            out.println("PEER_DEREGISTERED " + peerId);
+                        } else {
+                            out.println("ERROR Failed to deregister peer");
+                        }
+                    } else {
+                        logger.warning("Invalid DEREGISTER_PEER command: " + inputLine);
+                        out.println("ERROR Invalid DEREGISTER_PEER command");
+                    }
+                }
+                else if ("GET_PEERS_WITH_FILE".equals(command)) {
+                    if (parts.length >= 2) {
+                        String fileName = parts[1];
+                        List<PeerInfo> peers = IndexServer.getPeersWithFile(fileName);
+
+                        if (peers.isEmpty()) {
+                            logger.info("No peers found with file: " + fileName);
+                            out.println("NO_PEERS_FOUND");
+                        } else {
+                            logger.info("Found " + peers.size() + " peers with file: " + fileName);
+                            out.println(peers.toString());
+                        }
+                    } else {
+                        logger.warning("Invalid GET_PEERS_WITH_FILE command: " + inputLine);
+                        out.println("ERROR Invalid GET_PEERS_WITH_FILE command");
+                    }
+                }
+                else if ("SEARCH_FILES".equals(command)) {
+                    if (parts.length >= 2) {
+                        String pattern = parts[1];
+                        Map<String, List<PeerInfo>> results = IndexServer.searchFiles(pattern);
+
+                        if (results.isEmpty()) {
+                            logger.info("No files found matching pattern: " + pattern);
+                            out.println("NO_FILES_FOUND");
+                        } else {
+                            logger.info("Found " + results.size() + " files matching pattern: " + pattern);
+                            out.println(results.toString());
+                        }
+                    } else {
+                        logger.warning("Invalid SEARCH_FILES command: " + inputLine);
+                        out.println("ERROR Invalid SEARCH_FILES command");
+                    }
+                }
+                else {
+                    logger.warning("Unknown command: " + command);
+                    out.println("UNKNOWN_COMMAND");
                 }
             }
-
-            private synchronized void registerFile(String fileName, String peerId, String address, int port) {
-                PeerInfo peerInfo = new PeerInfo(peerId, address, port);
-                fileMap.computeIfAbsent(fileName, k -> new ArrayList<>()).add(peerInfo);
-                System.out.println("Registered file " + fileName + " with peer " + peerInfo);
-                System.out.println("Current file map: " + fileMap);
-            }
-
-            private synchronized List<PeerInfo> getPeersWithFile(String fileName) {
-                return fileMap.getOrDefault(fileName, Collections.emptyList());
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error handling client", e);
+        } finally {
+            try {
+                logger.info("Closing socket: " + clientSocket);
+                if (!clientSocket.isClosed()) {
+                    clientSocket.close();
+                }
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Error closing client socket", e);
             }
         }
+    }
+}

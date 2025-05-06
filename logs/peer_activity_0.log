@@ -1,0 +1,129 @@
+[2025-03-30 15:20:28] [INFO   ] Created peer peer2 on localhost:8002
+[2025-03-30 15:20:28] [INFO   ] Created peer peer1 on localhost:8001
+[2025-03-30 15:20:28] [INFO   ] Added shared file: files/peer2/file3.txt
+[2025-03-30 15:20:28] [INFO   ] Added shared file: files/peer1/file1.txt
+[2025-03-30 15:20:28] [INFO   ] Added shared file: files/peer2/file4.txt
+[2025-03-30 15:20:28] [INFO   ] Added shared file: files/peer1/file2.txt
+[2025-03-30 15:20:28] [INFO   ] Registering peer peer2 with tracker at localhost:6000
+[2025-03-30 15:20:28] [INFO   ] Registering peer peer1 with tracker at localhost:6000
+[2025-03-30 15:20:28] [WARNING] Unexpected registration response: ERROR Invalid port format
+[2025-03-30 15:20:28] [WARNING] Unexpected registration response: ERROR Invalid port format
+[2025-03-30 15:20:28] [INFO   ] Starting peer peer1 on port 8001
+[2025-03-30 15:20:28] [INFO   ] Starting peer peer2 on port 8002
+[2025-03-30 15:20:28] [INFO   ] Starting heartbeat service for peer peer1
+[2025-03-30 15:20:28] [INFO   ] Starting heartbeat service for peer peer2
+[2025-03-30 15:20:28] [INFO   ] Registering peer peer1 with tracker at localhost:6000
+[2025-03-30 15:20:28] [INFO   ] Registering peer peer2 with tracker at localhost:6000
+[2025-03-30 15:20:28] [FINE   ] Sending heartbeat to tracker for peer peer1
+[2025-03-30 15:20:28] [FINE   ] Sending heartbeat to tracker for peer peer2
+[2025-03-30 15:20:28] [WARNING] Unexpected registration response: ERROR Invalid port format
+[2025-03-30 15:20:28] [WARNING] Unexpected registration response: ERROR Invalid port format
+[2025-03-30 15:20:28] [INFO   ] Discovering peers from tracker
+[2025-03-30 15:20:28] [INFO   ] Discovering peers from tracker
+[2025-03-30 15:20:28] [FINE   ] Heartbeat acknowledged by tracker
+[2025-03-30 15:20:28] [FINE   ] Heartbeat acknowledged by tracker
+[2025-03-30 15:20:28] [INFO   ] Discovered peers: PEERS []
+[2025-03-30 15:20:28] [INFO   ] Discovered peers: PEERS []
+[2025-03-30 15:20:28] [INFO   ] Server socket bound successfully on port 8001
+[2025-03-30 15:20:28] [INFO   ] Server socket bound successfully on port 8002
+[2025-03-30 15:20:28] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 15:20:28] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 15:20:29] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 15:20:29] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 15:20:29] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 15:20:29] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 15:20:29] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 15:20:29] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 15:20:29] [WARNING] Error handling client connection from /127.0.0.1: null
+[2025-03-30 15:20:29] [WARNING] Error handling client connection from /127.0.0.1: null
+[2025-03-30 15:20:29] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 15:20:29] [WARNING] Error handling client connection from /127.0.0.1: null
+[2025-03-30 15:20:29] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 15:20:29] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 15:20:29] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 15:20:29] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 15:20:29] [WARNING] Error handling client connection from /127.0.0.1: null
+[2025-03-30 15:20:29] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 15:20:53] [INFO   ] Stopping peer peer1
+[2025-03-30 15:20:53] [INFO   ] Stopping heartbeat service for peer peer1
+[2025-03-30 15:20:53] [INFO   ] Server socket closed
+[2025-03-30 15:20:53] [INFO   ] Socket closed during shutdown
+[2025-03-30 15:20:53] [INFO   ] Peer peer1 stopped
+[2025-03-30 15:20:53] [INFO   ] Peer peer1 server loop exited
+[2025-03-30 15:20:53] [INFO   ] Stopping peer peer2
+[2025-03-30 15:20:53] [INFO   ] Stopping heartbeat service for peer peer2
+[2025-03-30 15:20:53] [INFO   ] Server socket closed
+[2025-03-30 15:20:53] [INFO   ] Socket closed during shutdown
+[2025-03-30 15:20:53] [INFO   ] Peer peer2 stopped
+[2025-03-30 15:20:53] [INFO   ] Peer peer2 server loop exited
+[2025-03-30 15:20:53] [INFO   ] Stopping peer peer1
+[2025-03-30 15:20:53] [INFO   ] Stopping heartbeat service for peer peer1
+[2025-03-30 15:20:53] [INFO   ] Peer peer1 stopped
+[2025-03-30 15:20:53] [INFO   ] Stopping peer peer2
+[2025-03-30 15:20:53] [INFO   ] Stopping heartbeat service for peer peer2
+[2025-03-30 15:20:53] [INFO   ] Peer peer2 stopped
+[2025-03-30 15:20:56] [INFO   ] Created peer peer2 on localhost:8002
+[2025-03-30 15:20:56] [INFO   ] Created peer peer1 on localhost:8001
+[2025-03-30 15:20:56] [INFO   ] Added shared file: files/peer2/file3.txt
+[2025-03-30 15:20:56] [INFO   ] Added shared file: files/peer1/file1.txt
+[2025-03-30 15:20:56] [INFO   ] Added shared file: files/peer1/file2.txt
+[2025-03-30 15:20:56] [INFO   ] Added shared file: files/peer2/file4.txt
+[2025-03-30 15:20:56] [INFO   ] Registering peer peer2 with tracker at localhost:6000
+[2025-03-30 15:20:56] [INFO   ] Registering peer peer1 with tracker at localhost:6000
+[2025-03-30 15:20:56] [WARNING] Unexpected registration response: ERROR Invalid port format
+[2025-03-30 15:20:56] [WARNING] Unexpected registration response: ERROR Invalid port format
+[2025-03-30 15:20:56] [INFO   ] Starting peer peer2 on port 8002
+[2025-03-30 15:20:56] [INFO   ] Starting peer peer1 on port 8001
+[2025-03-30 15:20:56] [INFO   ] Starting heartbeat service for peer peer2
+[2025-03-30 15:20:56] [INFO   ] Starting heartbeat service for peer peer1
+[2025-03-30 15:20:56] [INFO   ] Registering peer peer1 with tracker at localhost:6000
+[2025-03-30 15:20:56] [INFO   ] Registering peer peer2 with tracker at localhost:6000
+[2025-03-30 15:20:56] [FINE   ] Sending heartbeat to tracker for peer peer1
+[2025-03-30 15:20:56] [FINE   ] Sending heartbeat to tracker for peer peer2
+[2025-03-30 15:20:56] [WARNING] Unexpected registration response: ERROR Invalid port format
+[2025-03-30 15:20:56] [WARNING] Unexpected registration response: ERROR Invalid port format
+[2025-03-30 15:20:56] [INFO   ] Discovering peers from tracker
+[2025-03-30 15:20:56] [INFO   ] Discovering peers from tracker
+[2025-03-30 15:20:56] [FINE   ] Heartbeat acknowledged by tracker
+[2025-03-30 15:20:56] [FINE   ] Heartbeat acknowledged by tracker
+[2025-03-30 15:20:56] [INFO   ] Discovered peers: PEERS []
+[2025-03-30 15:20:56] [INFO   ] Discovered peers: PEERS []
+[2025-03-30 15:20:56] [INFO   ] Server socket bound successfully on port 8002
+[2025-03-30 15:20:56] [INFO   ] Server socket bound successfully on port 8001
+[2025-03-30 15:20:56] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 15:20:56] [FINE   ] Notified waiting threads that peer is ready
+[2025-03-30 15:20:56] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 15:20:56] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 15:20:56] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 15:20:56] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 15:20:56] [WARNING] Error handling client connection from /127.0.0.1: null
+[2025-03-30 15:20:56] [WARNING] Error handling client connection from /127.0.0.1: null
+[2025-03-30 15:20:56] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 15:20:56] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 15:20:56] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 15:20:56] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 15:20:56] [WARNING] Error handling client connection from /127.0.0.1: null
+[2025-03-30 15:20:56] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 15:20:56] [INFO   ] Accepted connection from /127.0.0.1
+[2025-03-30 15:20:56] [INFO   ] Handling connection from /127.0.0.1
+[2025-03-30 15:20:56] [WARNING] Error handling client connection from /127.0.0.1: null
+[2025-03-30 15:20:56] [INFO   ] Closed connection with /127.0.0.1
+[2025-03-30 15:20:56] [INFO   ] Stopping peer peer1
+[2025-03-30 15:20:56] [INFO   ] Stopping heartbeat service for peer peer1
+[2025-03-30 15:20:56] [INFO   ] Server socket closed
+[2025-03-30 15:20:56] [INFO   ] Socket closed during shutdown
+[2025-03-30 15:20:56] [INFO   ] Peer peer1 stopped
+[2025-03-30 15:20:56] [INFO   ] Peer peer1 server loop exited
+[2025-03-30 15:20:56] [INFO   ] Stopping peer peer2
+[2025-03-30 15:20:56] [INFO   ] Stopping heartbeat service for peer peer2
+[2025-03-30 15:20:56] [INFO   ] Server socket closed
+[2025-03-30 15:20:56] [INFO   ] Socket closed during shutdown
+[2025-03-30 15:20:56] [INFO   ] Peer peer2 stopped
+[2025-03-30 15:20:56] [INFO   ] Peer peer2 server loop exited
+[2025-03-30 15:20:56] [INFO   ] Stopping peer peer1
+[2025-03-30 15:20:56] [INFO   ] Stopping heartbeat service for peer peer1
+[2025-03-30 15:20:56] [INFO   ] Peer peer1 stopped
+[2025-03-30 15:20:56] [INFO   ] Stopping peer peer2
+[2025-03-30 15:20:56] [INFO   ] Stopping heartbeat service for peer peer2
+[2025-03-30 15:20:56] [INFO   ] Peer peer2 stopped
+[2025-03-30 15:20:57] [INFO   ] Stopping peer peer1

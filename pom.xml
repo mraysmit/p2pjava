@@ -17,6 +17,7 @@
 
 
     <modules>
+        <module>p2p-common</module>
         <module>p2p-peer</module>
         <module>p2p-tracker</module>
         <module>p2p-client</module>

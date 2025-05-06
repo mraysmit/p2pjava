@@ -13,21 +13,24 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 class TrackerHandlerTest {
-    private static final int TEST_PORT = 6789;
+    private static final int TEST_PORT = 6790;
     private ExecutorService executor;
     private ServerSocket serverSocket;
 
     @BeforeEach
     void setUp() throws IOException {
-        // Start a test server socket
         executor = Executors.newSingleThreadExecutor();
         serverSocket = new ServerSocket(TEST_PORT);
         executor.submit(() -> {
             try {
-                Socket socket = serverSocket.accept();
-                new TrackerHandler(socket).run();
+                while (!serverSocket.isClosed()) {
+                    Socket socket = serverSocket.accept();
+                    new TrackerHandler(socket).run();
+                }
             } catch (IOException e) {
-                // Ignore if closed during shutdown
+                if (!serverSocket.isClosed()) {
+                    e.printStackTrace();
+                }
             }
         });
     }
@@ -44,34 +47,37 @@ class TrackerHandlerTest {
     }
 
     @Test
-    void testRegisterPeer() throws IOException {
+    void testValidRegisterCommand() throws IOException {
         try (Socket socket = new Socket("localhost", TEST_PORT);
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
             out.println("REGISTER peer1 8001");
             String response = in.readLine();
-
             assertEquals("REGISTERED peer1", response);
         }
     }
 
     @Test
-    void testDiscoverPeers() throws IOException {
+    void testDiscoveryAfterRegistration() throws IOException {
+        // Register first
         try (Socket socket = new Socket("localhost", TEST_PORT);
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            // Register a peer first
-            out.println("REGISTER peer1 8001");
+            out.println("REGISTER testPeer 8080");
             in.readLine(); // consume response
+        }
 
-            // Now try to discover
+        // Then discover
+        try (Socket socket = new Socket("localhost", TEST_PORT);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
             out.println("DISCOVER");
             String response = in.readLine();
-
-            assertTrue(response.startsWith("PEERS ["));
-            assertTrue(response.contains("peer1"));
+            assertTrue(response.startsWith("PEERS"));
+            assertTrue(response.contains("testPeer"));
         }
     }
 
@@ -83,8 +89,22 @@ class TrackerHandlerTest {
 
             out.println("INVALID_COMMAND");
             String response = in.readLine();
-
             assertEquals("UNKNOWN_COMMAND", response);
+        }
+    }
+
+@Test
+    void testIncompleteRegisterCommand() throws IOException {
+        try (Socket socket = new Socket("localhost", TEST_PORT);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+            // Send incomplete REGISTER command
+            out.println("REGISTER");
+
+            // Now we expect a proper error message instead of a closed connection
+            String response = in.readLine();
+            assertEquals("ERROR Insufficient parameters for REGISTER", response);
         }
     }
 }

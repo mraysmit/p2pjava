@@ -20,20 +20,20 @@ import java.util.logging.Logger;
  */
 public class ConfigurationManager {
     private static final Logger logger = Logger.getLogger(ConfigurationManager.class.getName());
-    
+
     // Singleton instance
     private static ConfigurationManager instance;
-    
+
     // Configuration storage
     private final Map<String, String> configuration = new ConcurrentHashMap<>();
-    
+
     // Default configuration file paths
     private static final String[] DEFAULT_CONFIG_PATHS = {
         "config/application.properties",
         "application.properties",
         "config.properties"
     };
-    
+
     /**
      * Private constructor to enforce singleton pattern.
      */
@@ -41,7 +41,7 @@ public class ConfigurationManager {
         // Load default configuration
         loadDefaults();
     }
-    
+
     /**
      * Gets the singleton instance of the configuration manager.
      *
@@ -53,7 +53,7 @@ public class ConfigurationManager {
         }
         return instance;
     }
-    
+
     /**
      * Loads default configuration values.
      */
@@ -63,7 +63,7 @@ public class ConfigurationManager {
         setIfNotExists("tracker.port", "6000");
         setIfNotExists("tracker.thread.pool.size", "10");
         setIfNotExists("tracker.peer.timeout.ms", "90000");
-        
+
         // IndexServer defaults
         setIfNotExists("indexserver.host", "localhost");
         setIfNotExists("indexserver.port", "6001");
@@ -74,22 +74,22 @@ public class ConfigurationManager {
         setIfNotExists("indexserver.cache.refresh.ms", "300000");
         setIfNotExists("indexserver.connection.pool.max", "100");
         setIfNotExists("indexserver.connection.timeout.ms", "5000");
-        
+
         // Peer defaults
         setIfNotExists("peer.socket.timeout.ms", "30000");
         setIfNotExists("peer.heartbeat.interval.seconds", "30");
-        
+
         // Health check defaults
         setIfNotExists("healthcheck.enabled", "true");
         setIfNotExists("healthcheck.port", "8080");
         setIfNotExists("healthcheck.path", "/health");
-        
+
         // Bootstrap defaults
         setIfNotExists("bootstrap.auto.start", "true");
         setIfNotExists("bootstrap.startup.timeout.seconds", "30");
         setIfNotExists("bootstrap.dynamic.ports", "false");
     }
-    
+
     /**
      * Sets a configuration value if it doesn't already exist.
      *
@@ -99,7 +99,7 @@ public class ConfigurationManager {
     private void setIfNotExists(String key, String value) {
         configuration.putIfAbsent(key, value);
     }
-    
+
     /**
      * Initializes the configuration manager by loading configuration from
      * properties files, environment variables, and command-line arguments.
@@ -111,19 +111,19 @@ public class ConfigurationManager {
         try {
             // Load from default properties files
             loadFromPropertiesFiles();
-            
+
             // Load from environment variables
             loadFromEnvironment();
-            
+
             // Load from command-line arguments
             loadFromCommandLine(args);
-            
+
             // Validate configuration
             if (!validateConfiguration()) {
                 logger.severe("Configuration validation failed");
                 return false;
             }
-            
+
             logger.info("Configuration initialized successfully");
             return true;
         } catch (Exception e) {
@@ -131,19 +131,19 @@ public class ConfigurationManager {
             return false;
         }
     }
-    
+
     /**
      * Loads configuration from properties files.
      */
     private void loadFromPropertiesFiles() {
         boolean loaded = false;
-        
+
         // Try to load from custom config file specified in system property
         String customConfigPath = System.getProperty("config.file");
         if (customConfigPath != null && !customConfigPath.isEmpty()) {
             loaded = loadPropertiesFile(customConfigPath);
         }
-        
+
         // If custom config file not loaded, try default paths
         if (!loaded) {
             for (String path : DEFAULT_CONFIG_PATHS) {
@@ -153,12 +153,12 @@ public class ConfigurationManager {
                 }
             }
         }
-        
+
         if (!loaded) {
             logger.info("No properties files found, using default configuration");
         }
     }
-    
+
     /**
      * Loads configuration from a properties file.
      *
@@ -171,16 +171,16 @@ public class ConfigurationManager {
             logger.fine("Properties file not found: " + filePath);
             return false;
         }
-        
+
         try (InputStream input = new FileInputStream(path.toFile())) {
             Properties props = new Properties();
             props.load(input);
-            
+
             // Add all properties to configuration
             for (String key : props.stringPropertyNames()) {
                 configuration.put(key, props.getProperty(key));
             }
-            
+
             logger.info("Loaded configuration from " + filePath);
             return true;
         } catch (IOException e) {
@@ -188,7 +188,7 @@ public class ConfigurationManager {
             return false;
         }
     }
-    
+
     /**
      * Loads configuration from environment variables.
      * Environment variables are expected to be in the format P2P_UPPERCASE_WITH_UNDERSCORES
@@ -199,7 +199,7 @@ public class ConfigurationManager {
         for (Map.Entry<String, String> entry : env.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
-            
+
             // Only process environment variables that start with P2P_
             if (key.startsWith("P2P_")) {
                 // Convert P2P_UPPERCASE_WITH_UNDERSCORES to lowercase.with.dots
@@ -208,10 +208,11 @@ public class ConfigurationManager {
             }
         }
     }
-    
+
     /**
      * Loads configuration from command-line arguments.
      * Command-line arguments are expected to be in the format --key=value.
+     * Arguments starting with --config. will have the config. prefix removed.
      *
      * @param args Command-line arguments
      */
@@ -219,19 +220,32 @@ public class ConfigurationManager {
         if (args == null || args.length == 0) {
             return;
         }
-        
+
         for (String arg : args) {
             if (arg.startsWith("--") && arg.contains("=")) {
                 String[] parts = arg.substring(2).split("=", 2);
                 if (parts.length == 2) {
                     String key = parts[0];
                     String value = parts[1];
+
+                    // Handle config.file specially to set the system property
+                    if (key.equals("config.file")) {
+                        System.setProperty("config.file", value);
+                        // Re-load from properties files
+                        loadFromPropertiesFiles();
+                    }
+
+                    // Remove config. prefix if present
+                    if (key.startsWith("config.")) {
+                        key = key.substring(7);
+                    }
+
                     configuration.put(key, value);
                 }
             }
         }
     }
-    
+
     /**
      * Validates the configuration.
      *
@@ -245,21 +259,21 @@ public class ConfigurationManager {
             "indexserver.host",
             "indexserver.port"
         };
-        
+
         for (String key : requiredKeys) {
             if (!configuration.containsKey(key) || configuration.get(key).isEmpty()) {
                 logger.severe("Required configuration missing: " + key);
                 return false;
             }
         }
-        
+
         // Validate port numbers
         String[] portKeys = {
             "tracker.port",
             "indexserver.port",
             "healthcheck.port"
         };
-        
+
         for (String key : portKeys) {
             String value = configuration.get(key);
             if (value != null) {
@@ -275,10 +289,10 @@ public class ConfigurationManager {
                 }
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Gets a configuration value.
      *
@@ -288,7 +302,7 @@ public class ConfigurationManager {
     public String get(String key) {
         return configuration.get(key);
     }
-    
+
     /**
      * Gets a configuration value, or a default value if not found.
      *
@@ -299,7 +313,7 @@ public class ConfigurationManager {
     public String get(String key, String defaultValue) {
         return configuration.getOrDefault(key, defaultValue);
     }
-    
+
     /**
      * Gets a configuration value as an integer.
      *
@@ -312,7 +326,7 @@ public class ConfigurationManager {
         if (value == null) {
             return defaultValue;
         }
-        
+
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
@@ -320,7 +334,7 @@ public class ConfigurationManager {
             return defaultValue;
         }
     }
-    
+
     /**
      * Gets a configuration value as a long.
      *
@@ -333,7 +347,7 @@ public class ConfigurationManager {
         if (value == null) {
             return defaultValue;
         }
-        
+
         try {
             return Long.parseLong(value);
         } catch (NumberFormatException e) {
@@ -341,23 +355,29 @@ public class ConfigurationManager {
             return defaultValue;
         }
     }
-    
+
     /**
      * Gets a configuration value as a boolean.
      *
      * @param key The configuration key
      * @param defaultValue The default value
-     * @return The configuration value as a boolean, or the default value if not found
+     * @return The configuration value as a boolean, or the default value if not found or not a valid boolean
      */
     public boolean getBoolean(String key, boolean defaultValue) {
         String value = get(key);
         if (value == null) {
             return defaultValue;
         }
-        
-        return Boolean.parseBoolean(value);
+
+        value = value.toLowerCase();
+        if (value.equals("true") || value.equals("false")) {
+            return Boolean.parseBoolean(value);
+        } else {
+            logger.warning("Invalid boolean format for " + key + ": " + value);
+            return defaultValue;
+        }
     }
-    
+
     /**
      * Sets a configuration value.
      *
@@ -367,7 +387,7 @@ public class ConfigurationManager {
     public void set(String key, String value) {
         configuration.put(key, value);
     }
-    
+
     /**
      * Gets all configuration values.
      *
@@ -376,7 +396,7 @@ public class ConfigurationManager {
     public Map<String, String> getAll() {
         return new HashMap<>(configuration);
     }
-    
+
     /**
      * Finds an available port starting from the specified port.
      *

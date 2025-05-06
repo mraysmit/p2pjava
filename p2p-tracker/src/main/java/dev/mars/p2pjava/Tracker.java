@@ -45,8 +45,8 @@ public class Tracker {
             handler.setFormatter(new SimpleFormatter());
             handler.setLevel(Level.INFO);
 
-            logger.addHandler(handler);
-            logger.setLevel(Level.INFO);
+            rootLogger.addHandler(handler);
+            rootLogger.setLevel(Level.INFO);
         } catch (Exception e) {
             System.err.println("Error setting up logger: " + e.getMessage());
         }

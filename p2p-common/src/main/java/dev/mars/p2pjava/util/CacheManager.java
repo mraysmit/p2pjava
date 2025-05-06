@@ -18,28 +18,28 @@ import java.util.logging.Logger;
  */
 public class CacheManager<K, V> {
     private static final Logger logger = Logger.getLogger(CacheManager.class.getName());
-    
+
     // The cache storage
     private final Map<K, CacheEntry<V>> cache = new ConcurrentHashMap<>();
-    
+
     // The executor service for cache maintenance
     private final ScheduledExecutorService executor;
-    
+
     // The default time-to-live for cache entries in milliseconds
     private final long defaultTtlMs;
-    
+
     // The default refresh interval for cache entries in milliseconds
     private final long defaultRefreshMs;
-    
+
     // The function to load data into the cache
     private final Function<K, V> loadFunction;
-    
+
     // Statistics
     private long cacheHits = 0;
     private long cacheMisses = 0;
     private long cacheEvictions = 0;
     private long cacheRefreshes = 0;
-    
+
     /**
      * Creates a new cache manager with the specified parameters.
      *
@@ -51,7 +51,7 @@ public class CacheManager<K, V> {
         this.defaultTtlMs = defaultTtlMs;
         this.defaultRefreshMs = defaultRefreshMs;
         this.loadFunction = loadFunction;
-        
+
         // Create a thread pool with a custom thread factory
         this.executor = Executors.newScheduledThreadPool(1, r -> {
             Thread t = new Thread(r, "CacheManager-" + 
@@ -59,13 +59,13 @@ public class CacheManager<K, V> {
             t.setDaemon(true);
             return t;
         });
-        
+
         // Start cache maintenance task
         startCacheMaintenance();
-        
+
         logger.info("Created cache manager with TTL: " + defaultTtlMs + "ms, refresh: " + defaultRefreshMs + "ms");
     }
-    
+
     /**
      * Gets a value from the cache, loading it if necessary.
      *
@@ -74,31 +74,36 @@ public class CacheManager<K, V> {
      */
     public V get(K key) {
         CacheEntry<V> entry = cache.get(key);
-        
+
         if (entry != null && !entry.isExpired()) {
             // Cache hit
             cacheHits++;
             return entry.getValue();
         }
-        
+
         // Cache miss or expired entry
         cacheMisses++;
-        
+
+        // If entry exists but is expired, increment eviction count
+        if (entry != null && entry.isExpired()) {
+            cacheEvictions++;
+        }
+
         // Load the value
         V value = loadFunction.apply(key);
-        
+
         if (value != null) {
             // Put the value in the cache
             put(key, value);
         } else if (entry != null) {
             // Remove expired entry if the load function returned null
             cache.remove(key);
-            cacheEvictions++;
+            // Don't increment evictions again, we already did it above
         }
-        
+
         return value;
     }
-    
+
     /**
      * Puts a value in the cache with the default TTL and refresh interval.
      *
@@ -108,7 +113,7 @@ public class CacheManager<K, V> {
     public void put(K key, V value) {
         put(key, value, defaultTtlMs, defaultRefreshMs);
     }
-    
+
     /**
      * Puts a value in the cache with the specified TTL and refresh interval.
      *
@@ -121,13 +126,13 @@ public class CacheManager<K, V> {
         long expirationTime = System.currentTimeMillis() + ttlMs;
         CacheEntry<V> entry = new CacheEntry<>(value, expirationTime, refreshMs);
         cache.put(key, entry);
-        
+
         // Schedule refresh if needed
         if (refreshMs > 0) {
             scheduleRefresh(key, refreshMs);
         }
     }
-    
+
     /**
      * Removes a value from the cache.
      *
@@ -142,7 +147,7 @@ public class CacheManager<K, V> {
         }
         return null;
     }
-    
+
     /**
      * Clears the cache.
      */
@@ -151,7 +156,7 @@ public class CacheManager<K, V> {
         cacheEvictions += cache.size();
         logger.info("Cache cleared");
     }
-    
+
     /**
      * Gets the number of entries in the cache.
      *
@@ -160,7 +165,7 @@ public class CacheManager<K, V> {
     public int size() {
         return cache.size();
     }
-    
+
     /**
      * Gets the cache hit count.
      *
@@ -169,7 +174,7 @@ public class CacheManager<K, V> {
     public long getCacheHits() {
         return cacheHits;
     }
-    
+
     /**
      * Gets the cache miss count.
      *
@@ -178,7 +183,7 @@ public class CacheManager<K, V> {
     public long getCacheMisses() {
         return cacheMisses;
     }
-    
+
     /**
      * Gets the cache hit ratio.
      *
@@ -188,7 +193,7 @@ public class CacheManager<K, V> {
         long total = cacheHits + cacheMisses;
         return total > 0 ? (double) cacheHits / total : 0;
     }
-    
+
     /**
      * Gets the cache eviction count.
      *
@@ -197,7 +202,7 @@ public class CacheManager<K, V> {
     public long getCacheEvictions() {
         return cacheEvictions;
     }
-    
+
     /**
      * Gets the cache refresh count.
      *
@@ -206,7 +211,7 @@ public class CacheManager<K, V> {
     public long getCacheRefreshes() {
         return cacheRefreshes;
     }
-    
+
     /**
      * Shuts down the cache manager.
      */
@@ -223,10 +228,10 @@ public class CacheManager<K, V> {
             executor.shutdownNow();
             Thread.currentThread().interrupt();
         }
-        
+
         logger.info("Cache manager shut down");
     }
-    
+
     /**
      * Gets a summary of the cache statistics.
      *
@@ -237,12 +242,12 @@ public class CacheManager<K, V> {
                 "size=" + cache.size() +
                 ", hits=" + cacheHits +
                 ", misses=" + cacheMisses +
-                ", hitRatio=" + String.format("%.2f", getCacheHitRatio() * 100) + "%" +
+                ", hit ratio=" + String.format("%.2f", getCacheHitRatio() * 100) + "%" +
                 ", evictions=" + cacheEvictions +
                 ", refreshes=" + cacheRefreshes +
                 '}';
     }
-    
+
     /**
      * Starts the cache maintenance task.
      */
@@ -261,10 +266,10 @@ public class CacheManager<K, V> {
                 logger.log(Level.WARNING, "Error during cache maintenance", e);
             }
         }, 60, 60, TimeUnit.SECONDS);
-        
+
         logger.info("Cache maintenance task started");
     }
-    
+
     /**
      * Schedules a refresh for a cache entry.
      *
@@ -284,7 +289,7 @@ public class CacheManager<K, V> {
                         long expirationTime = System.currentTimeMillis() + defaultTtlMs;
                         entry.update(value, expirationTime);
                         cacheRefreshes++;
-                        
+
                         // Schedule next refresh
                         scheduleRefresh(key, refreshMs);
                     } else {
@@ -298,7 +303,7 @@ public class CacheManager<K, V> {
             }
         }, refreshMs, TimeUnit.MILLISECONDS);
     }
-    
+
     /**
      * A cache entry with expiration and refresh information.
      *
@@ -308,7 +313,7 @@ public class CacheManager<K, V> {
         private V value;
         private long expirationTime;
         private final long refreshMs;
-        
+
         /**
          * Creates a new cache entry.
          *
@@ -321,7 +326,7 @@ public class CacheManager<K, V> {
             this.expirationTime = expirationTime;
             this.refreshMs = refreshMs;
         }
-        
+
         /**
          * Gets the cached value.
          *
@@ -330,7 +335,7 @@ public class CacheManager<K, V> {
         public V getValue() {
             return value;
         }
-        
+
         /**
          * Checks if the entry is expired.
          *
@@ -339,7 +344,7 @@ public class CacheManager<K, V> {
         public boolean isExpired() {
             return System.currentTimeMillis() > expirationTime;
         }
-        
+
         /**
          * Updates the entry with a new value and expiration time.
          *

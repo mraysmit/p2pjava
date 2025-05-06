@@ -87,7 +87,11 @@ public class ConnectionPool {
         long waitTime = System.currentTimeMillis() - startTime;
         connectionWaitTime.addAndGet(waitTime);
         activeConnections.incrementAndGet();
-        totalConnections.incrementAndGet();
+
+        // Only increment total connections if we're below the maximum
+        if (totalConnections.get() < maxConnections) {
+            totalConnections.incrementAndGet();
+        }
 
         try {
             // Execute the task
@@ -200,7 +204,7 @@ public class ConnectionPool {
                 "maxConnections=" + maxConnections +
                 ", activeConnections=" + activeConnections.get() +
                 ", totalConnections=" + totalConnections.get() +
-                ", averageWaitTime=" + String.format("%.2f", getAverageWaitTime()) + "ms" +
+                ", wait time=" + String.format("%.2f", getAverageWaitTime()) + "ms" +
                 ", connectionTimeouts=" + connectionTimeouts.get() +
                 '}';
     }

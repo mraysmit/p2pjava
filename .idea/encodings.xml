@@ -11,6 +11,8 @@
     <file url="file://$PROJECT_DIR$/p2p-common/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/p2p-config/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/p2p-config/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/p2p-connection/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/p2p-connection/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/p2p-discovery/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/p2p-discovery/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/p2p-health/src/main/java" charset="UTF-8" />

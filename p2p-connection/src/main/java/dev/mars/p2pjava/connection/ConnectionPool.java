@@ -1,4 +1,4 @@
-package dev.mars.p2pjava.util;
+package dev.mars.p2pjava.connection;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;

@@ -28,6 +28,7 @@
         <module>p2p-tracker</module>
         <module>p2p-client</module>
         <module>p2p-indexserver</module>
+        <module>p2p-connection</module>
     </modules>
 
 </project>

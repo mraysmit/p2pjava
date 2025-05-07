@@ -21,6 +21,7 @@ import java.util.logging.Logger;
  * Service for bootstrapping the P2P system.
  * This class is responsible for starting the Tracker, IndexServer, and any Peer instances
  * in the correct order, with proper dependency management and graceful shutdown.
+ * is used by the P2PBootstrap class to manage the lifecycle of components.
  */
 public class BootstrapService {
     private static final Logger logger = Logger.getLogger(BootstrapService.class.getName());

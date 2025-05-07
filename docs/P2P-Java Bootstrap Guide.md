@@ -1,4 +1,5 @@
-# P2P-Java Bootstrap Guide
+
+# P2P-Java Bootstrap Guide (Updated)
 
 This guide explains how to use the bootstrap system to configure and start the P2P system.
 
@@ -10,6 +11,7 @@ The bootstrap system provides a centralized way to configure and start the P2P s
 2. **Health Checks**: Monitor the health of system components
 3. **Dependency Management**: Start components in the correct order based on dependencies
 4. **Dynamic Port Allocation**: Automatically find available ports for services
+5. **Graceful Shutdown**: Ensure proper shutdown of all components when the application exits
 
 ## Configuration
 
@@ -20,7 +22,8 @@ The configuration system loads settings from the following sources, in order of 
 1. Command-line arguments (`--key=value`)
 2. Environment variables (`P2P_KEY=value`)
 3. Properties files
-4. Default values
+4. Default values from properties file (`config/config-manager-defaults.properties`)
+5. Hardcoded default values (fallback if properties file is not found)
 
 ### Configuration Files
 
@@ -86,6 +89,7 @@ Command-line arguments use the format `--key=value`:
 --tracker.port=6000
 --indexserver.port=6001
 --healthcheck.enabled=true
+--config.file=/path/to/custom/config.properties
 ```
 
 ## Starting the System
@@ -125,6 +129,19 @@ Start all components with custom ports:
 java -cp <classpath> dev.mars.p2pjava.bootstrap.P2PBootstrap --tracker.port=7000 --indexserver.port=7001
 ```
 
+#### Usage Help
+
+You can view usage information by calling the `printUsage()` method, which displays:
+
+```
+Usage: java -jar p2p-bootstrap.jar [options]
+Options:
+  --mode <mode>           Mode: start, stop, status (default: start)
+  --components <list>     Components to start: tracker, indexserver, peer, all (default: all)
+  --config.file <path>    Path to configuration file
+  --<key>=<value>         Set configuration value
+```
+
 ### Using the BootstrapService Programmatically
 
 You can also use the `BootstrapService` class programmatically to start the P2P system:
@@ -148,14 +165,60 @@ bootstrap.addDependency("indexserver", "tracker");
 bootstrap.start();
 ```
 
+## Component Handling
+
+### Standard Components
+
+The tracker and index server components are handled directly by the BootstrapService, which:
+1. Creates instances of these components
+2. Calls their start/stop methods
+3. Manages their dependencies
+
+### Peer Components
+
+Peer components are handled differently from the tracker and index server:
+
+1. P2PBootstrap identifies peer components with the message: "Peer startup will be handled separately"
+2. Peers may require specific configuration and multiple instances
+3. Peer dependencies on the tracker are managed separately
+4. When stopping, P2PBootstrap logs: "Peer shutdown will be handled separately"
+
+This separation allows for more flexible peer management, especially in scenarios where multiple peer instances need to be created with different configurations.
+
 ## Health Checks
 
-The bootstrap system includes a health check server that provides HTTP endpoints for monitoring the health of system components.
+### Health Check Server
+
+When `healthcheck.enabled` is set to `true` (default), the BootstrapService automatically starts a HealthCheckServer that provides HTTP endpoints for monitoring the health of system components.
+
+The HealthCheckServer:
+1. Is initialized during BootstrapService creation
+2. Uses the port specified by `healthcheck.port` (default: 8080)
+3. Starts when the bootstrap service starts
+4. Stops when the bootstrap service stops
+
+### Service Registration
+
+Both P2PBootstrap and BootstrapService register themselves with the health check system:
+
+```java
+// In P2PBootstrap
+HealthCheck.ServiceHealth health = HealthCheck.registerService("P2PBootstrap");
+health.addHealthDetail("mode", mode);
+health.addHealthDetail("components", components);
+
+// In BootstrapService
+HealthCheck.ServiceHealth health = HealthCheck.registerService("BootstrapService");
+health.addHealthDetail("startTime", System.currentTimeMillis());
+```
+
+This allows their status to be monitored along with other components.
 
 ### Endpoints
 
 - `GET /health`: Returns the overall health status of the system
 - `GET /health/details`: Returns detailed health status information for all components
+- `GET /health/detailed`: Alternative endpoint for detailed health (for test compatibility)
 - `GET /health/service?name=<service>`: Returns health status information for a specific service
 
 ### Health Status Format
@@ -181,6 +244,21 @@ The health status is returned in JSON format:
         "host": "localhost",
         "port": 6001
       }
+    },
+    "P2PBootstrap": {
+      "status": "UP",
+      "lastChecked": 1621234567890,
+      "details": {
+        "mode": "start",
+        "components": ["all"]
+      }
+    },
+    "BootstrapService": {
+      "status": "UP",
+      "lastChecked": 1621234567890,
+      "details": {
+        "startTime": 1621234567890
+      }
     }
   }
 }
@@ -194,6 +272,28 @@ When dynamic port allocation is enabled, the system will start searching for ava
 
 For example, if `tracker.port` is set to `6000` and that port is already in use, the system will try `6001`, `6002`, and so on until it finds an available port.
 
+This is particularly useful for:
+- Running multiple instances on the same machine
+- Automated testing environments
+- Environments where port conflicts are common
+
+## Graceful Shutdown
+
+The BootstrapService sets up a shutdown hook to ensure graceful shutdown of all components when the application exits:
+
+```java
+// Set up shutdown hook for graceful shutdown
+Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
+```
+
+This ensures that:
+1. All services are stopped in the reverse order of their startup
+2. Resources are properly released
+3. Health check server is stopped
+4. Thread pools are shut down
+
+The shutdown process can also be triggered manually by calling the `stop()` method on the BootstrapService.
+
 ## Troubleshooting
 
 ### Common Issues
@@ -201,6 +301,8 @@ For example, if `tracker.port` is set to `6000` and that port is already in use,
 1. **ClassNotFoundException**: Make sure all required classes are in the classpath.
 2. **Port already in use**: Set `bootstrap.dynamic.ports` to `true` or use different port numbers.
 3. **Configuration not loading**: Check the configuration file path and format.
+4. **Circular dependencies**: Ensure there are no circular dependencies between components.
+5. **Startup timeout**: Increase the `bootstrap.startup.timeout.seconds` value if components take longer to start.
 
 ### Logging
 
@@ -222,4 +324,4 @@ dev.mars.p2pjava.level=FINE
 
 ## Conclusion
 
-The bootstrap system provides a flexible and powerful way to configure and start the P2P system. By using the configuration management, health checks, and dependency management features, you can ensure that your P2P system starts correctly and remains healthy.
+The bootstrap system provides a flexible and powerful way to configure and start the P2P system. By using the configuration management, health checks, dependency management, and graceful shutdown features, you can ensure that your P2P system starts correctly, remains healthy, and shuts down properly when needed.

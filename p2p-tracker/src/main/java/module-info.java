@@ -8,6 +8,8 @@ module dev.mars.p2ptracker {
     // Require other Java modules used by the p2p-tracker module
     requires java.base; // This is implicit, but included for clarity
 
-    // Require the p2p-common module
-    requires dev.mars.p2pcommon;
+    requires java.net.http; // For HTTP client functionality
+
+    // Require the p2p-discovery module
+    requires dev.mars.p2pdiscovery;
 }

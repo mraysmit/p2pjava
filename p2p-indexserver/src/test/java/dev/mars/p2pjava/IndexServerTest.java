@@ -4,7 +4,6 @@ import dev.mars.p2pjava.common.PeerInfo;
 import dev.mars.p2pjava.storage.FileBasedIndexStorage;
 import dev.mars.p2pjava.storage.FileIndexStorage;
 import dev.mars.p2pjava.util.CacheManager;
-import dev.mars.p2pjava.util.HealthCheck;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,9 +11,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;

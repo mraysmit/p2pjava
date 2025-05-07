@@ -17,6 +17,13 @@
 
 
     <modules>
+        <module>p2p-common-api</module>
+        <module>p2p-config</module>
+        <module>p2p-bootstrap</module>
+        <module>p2p-health</module>
+        <module>p2p-discovery</module>
+        <module>p2p-storage</module>
+        <module>p2p-util</module>
         <module>p2p-common</module>
         <module>p2p-peer</module>
         <module>p2p-tracker</module>

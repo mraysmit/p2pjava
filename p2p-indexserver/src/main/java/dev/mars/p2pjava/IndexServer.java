@@ -7,6 +7,7 @@ import dev.mars.p2pjava.storage.FileBasedIndexStorage;
 import dev.mars.p2pjava.storage.FileIndexStorage;
 import dev.mars.p2pjava.util.CacheManager;
 import dev.mars.p2pjava.util.ConnectionPool;
+import dev.mars.p2pjava.util.HealthCheck;
 
 import java.io.*;
 import java.net.*;

@@ -24,7 +24,6 @@
         <module>p2p-discovery</module>
         <module>p2p-storage</module>
         <module>p2p-util</module>
-        <module>p2p-common</module>
         <module>p2p-peer</module>
         <module>p2p-tracker</module>
         <module>p2p-client</module>

@@ -1,5 +1,7 @@
 package dev.mars.p2pjava;
 
+import dev.mars.p2pjava.util.ChecksumUtil;
+
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;

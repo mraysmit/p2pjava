@@ -17,12 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>dev.mars</groupId>
-            <artifactId>p2p-common</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
+
         <dependency>
             <groupId>dev.mars</groupId>
             <artifactId>p2p-tracker</artifactId>
@@ -44,6 +39,12 @@
         <dependency>
             <groupId>dev.mars</groupId>
             <artifactId>p2p-config</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.mars</groupId>
+            <artifactId>p2p-bootstrap</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

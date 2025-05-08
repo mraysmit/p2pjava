@@ -49,9 +49,10 @@ public class BootstrapService {
         });
 
         // Create health check server
+        // Dynamic port for health check server is enabled by default
         if (config.getBoolean("healthcheck.enabled", true)) {
-            // Use dynamic port if configured (useful for tests)
-            if (config.getBoolean("bootstrap.dynamic.ports", false)) {
+            // Use dynamic port if configured (enabled by default)
+            if (config.getBoolean("bootstrap.dynamic.ports", true)) {
                 int dynamicPort = config.findAvailablePort(8000);
                 config.set("healthcheck.port", String.valueOf(dynamicPort));
                 logger.info("Using dynamic port for health check server: " + dynamicPort);
@@ -413,6 +414,42 @@ public class BootstrapService {
                 // Create service instance if it doesn't exist
                 if (serviceInstance == null) {
                     serviceInstance = serviceClass.getDeclaredConstructor().newInstance();
+                }
+
+                // Configure dynamic ports if enabled
+                ConfigurationManager config = ConfigurationManager.getInstance();
+                if (config.getBoolean("bootstrap.dynamic.ports", true)) {
+                    // Configure dynamic ports for known services
+                    int basePort;
+                    String portProperty;
+                    String serviceType;
+
+                    if (serviceId.equals("tracker")) {
+                        basePort = 6000;
+                        portProperty = "tracker.port";
+                        serviceType = "tracker";
+                    } else if (serviceId.equals("indexserver")) {
+                        basePort = 6001;
+                        portProperty = "indexserver.port";
+                        serviceType = "index server";
+                    } else if (serviceId.startsWith("peer")) {
+                        basePort = 7000;
+                        portProperty = "peer.port";
+                        serviceType = "peer";
+                    } else {
+                        // Skip dynamic port allocation for unknown services
+                        basePort = 0;
+                        portProperty = null;
+                        serviceType = null;
+                    }
+
+                    if (portProperty != null) {
+                        int dynamicPort = config.findAvailablePort(basePort);
+                        config.set(portProperty, String.valueOf(dynamicPort));
+                        // Set system property for service to use
+                        System.setProperty(portProperty, String.valueOf(dynamicPort));
+                        logger.info("Using dynamic port for " + serviceType + ": " + dynamicPort);
+                    }
                 }
 
                 // Call start method

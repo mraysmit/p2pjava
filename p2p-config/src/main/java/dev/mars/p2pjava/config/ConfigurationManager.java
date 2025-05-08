@@ -17,6 +17,12 @@ import java.util.logging.Logger;
  * Centralized configuration management for the P2P system.
  * This class provides methods for loading configuration from properties files,
  * environment variables, and command-line arguments.
+ * It also provides methods for retrieving and validating configuration values.
+ * Supports loading configuration from:
+ * - Properties files (default and custom locations)
+ * - Environment variables (with P2P_ prefix)
+ * - Command-line arguments (with --key=value format)
+ * Currently is runs as a singleton instance.
  */
 public class ConfigurationManager {
     private static final Logger logger = Logger.getLogger(ConfigurationManager.class.getName());

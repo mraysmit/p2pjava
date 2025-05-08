@@ -5,7 +5,7 @@ import dev.mars.p2pjava.discovery.ServiceRegistry;
 import dev.mars.p2pjava.discovery.ServiceRegistryFactory;
 import dev.mars.p2pjava.storage.FileBasedIndexStorage;
 import dev.mars.p2pjava.storage.FileIndexStorage;
-import dev.mars.p2pjava.util.CacheManager;
+import dev.mars.p2pjava.cache.CacheManager;
 import dev.mars.p2pjava.connection.ConnectionPool;
 import dev.mars.p2pjava.util.HealthCheck;
 
@@ -16,9 +16,17 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
+/**
+ * IndexServer is a server that maintains a file index and provides methods to register,
+ * deregister, and search for files across multiple peers.
+ * It uses a file-based storage system and supports caching for improved performance.
+ * Currently, it is designed to run as a single instance application.
+ */
+
 public class IndexServer {
     private static final Logger logger = Logger.getLogger(IndexServer.class.getName());
-    private static final int INDEX_SERVER_PORT = 6001;
+    private static final int DEFAULT_INDEX_SERVER_PORT = 6001;
+    private static int indexServerPort;
     private static final int THREAD_POOL_SIZE = 10;
     private static final String STORAGE_DIR = "data";
     private static final String STORAGE_FILE = "file_index.dat";
@@ -63,10 +71,24 @@ public class IndexServer {
     }
 
     public static void startIndexServer() {
+        // Initialize index server port from system property or use default
+        String indexServerPortStr = System.getProperty("indexserver.port");
+        if (indexServerPortStr != null && !indexServerPortStr.isEmpty()) {
+            try {
+                indexServerPort = Integer.parseInt(indexServerPortStr);
+                logger.info("Using dynamic port for index server: " + indexServerPort);
+            } catch (NumberFormatException e) {
+                logger.warning("Invalid indexserver.port system property: " + indexServerPortStr + ". Using default port.");
+                indexServerPort = DEFAULT_INDEX_SERVER_PORT;
+            }
+        } else {
+            indexServerPort = DEFAULT_INDEX_SERVER_PORT;
+            logger.info("No dynamic port specified for index server. Using default port: " + indexServerPort);
+        }
         // Register with health check system
         health = HealthCheck.registerService("IndexServer");
         health.addHealthDetail("status", "starting");
-        health.addHealthDetail("port", INDEX_SERVER_PORT);
+        health.addHealthDetail("port", indexServerPort);
         health.setHealthy(false); // Will be set to true when fully initialized
 
         // Initialize thread pool with custom thread factory for better debugging
@@ -125,9 +147,9 @@ public class IndexServer {
             stopIndexServer();
         }));
 
-        try (ServerSocket serverSocket = new ServerSocket(INDEX_SERVER_PORT)) {
+        try (ServerSocket serverSocket = new ServerSocket(indexServerPort)) {
             serverSocket.setSoTimeout(5000); // Add timeout to allow for graceful shutdown
-            logger.info("IndexServer is running on port " + INDEX_SERVER_PORT);
+            logger.info("IndexServer is running on port " + indexServerPort);
 
             // Update health status to indicate server is running
             health.setHealthy(true);

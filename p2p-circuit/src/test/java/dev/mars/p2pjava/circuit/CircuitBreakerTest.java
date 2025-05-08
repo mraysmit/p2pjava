@@ -1,4 +1,4 @@
-package dev.mars.p2pjava.util;
+package dev.mars.p2pjava.circuit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

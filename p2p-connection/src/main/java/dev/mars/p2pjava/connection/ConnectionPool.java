@@ -5,8 +5,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 /**
- * A connection pool for managing network connections.
- * This class provides a way to reuse connections instead of creating new ones for each request,
+ * A very noddy connection pool for managing network connections.
+ * Provides a way to reuse connections instead of creating new ones for each request,
  * which improves performance and resource utilization.
  */
 public class ConnectionPool {
@@ -64,7 +64,7 @@ public class ConnectionPool {
     /**
      * Executes a task using a connection from the pool.
      *
-     * @param task The task to execute
+     * @param task The task to execute a whatsit
      * @param <T> The return type of the task
      * @return The result of the task
      * @throws InterruptedException If the thread is interrupted while waiting for a connection

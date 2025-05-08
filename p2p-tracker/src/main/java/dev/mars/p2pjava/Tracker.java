@@ -1,7 +1,16 @@
 package dev.mars.p2pjava;
 
-
-
+/**
+ * 1. **Single Instance Design**: The Tracker is designed to run as a single instance application. It manages global state like active peers, and there's no need to create multiple instances of the Tracker class.
+ * 2. **Utility Class Pattern**: The class functions as a utility class providing tracker functionality. All shared resources (like map, thread pool, and service registry) are static fields. `peerLastSeen`
+ * 3. **Centralized Service**: The Tracker serves as a centralized service with:
+ *     - A single server socket accepting connections on a configurable port (default 6000)
+ *     - A shared thread pool managing connections
+ *     - A global peer tracking mechanism
+ *
+ * 4. **Stateless Operations**: Methods like `updatePeerLastSeen()`, `isPeerAlive()`, and `getActivePeers()` are essentially stateless operations that work on the shared static state.
+ * 5. **Startup/Shutdown Logic**: The `main()`, `startTracker()`, and `stopTracker()` methods manage the lifecycle of the single Tracker instance.
+ **/
 
 import dev.mars.p2pjava.discovery.ServiceRegistry;
 import dev.mars.p2pjava.discovery.ServiceRegistryFactory;
@@ -18,7 +27,8 @@ import java.util.stream.Collectors;
 
 public class Tracker {
     private static final Logger logger = Logger.getLogger(Tracker.class.getName());
-    private static final int TRACKER_PORT = 6000;
+    private static final int DEFAULT_TRACKER_PORT = 6000;
+    private static int trackerPort;
     private static final int THREAD_POOL_SIZE = 10;
     private static final Map<String, Long> peerLastSeen = new ConcurrentHashMap<>();
     private static final long PEER_TIMEOUT_MS = 90000; // 90 seconds
@@ -56,6 +66,20 @@ public class Tracker {
     }
 
     public static void startTracker() {
+        // Initialize tracker port from system property or use default
+        String trackerPortStr = System.getProperty("tracker.port");
+        if (trackerPortStr != null && !trackerPortStr.isEmpty()) {
+            try {
+                trackerPort = Integer.parseInt(trackerPortStr);
+                logger.info("Using dynamic port for tracker: " + trackerPort);
+            } catch (NumberFormatException e) {
+                logger.warning("Invalid tracker.port system property: " + trackerPortStr + ". Using default port.");
+                trackerPort = DEFAULT_TRACKER_PORT;
+            }
+        } else {
+            trackerPort = DEFAULT_TRACKER_PORT;
+            logger.info("No dynamic port specified for tracker. Using default port: " + trackerPort);
+        }
         // Initialize thread pool with custom thread factory for better debugging
         threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE, r -> {
             Thread t = new Thread(r, "Tracker-" + UUID.randomUUID().toString().substring(0, 8));
@@ -82,9 +106,9 @@ public class Tracker {
         Map<String, String> metadata = new HashMap<>();
         metadata.put("startTime", String.valueOf(System.currentTimeMillis()));
 
-        boolean registered = serviceRegistry.registerService("tracker", trackerId, host, TRACKER_PORT, metadata);
+        boolean registered = serviceRegistry.registerService("tracker", trackerId, host, trackerPort, metadata);
         if (registered) {
-            logger.info("Registered tracker with service registry: " + trackerId + " at " + host + ":" + TRACKER_PORT);
+            logger.info("Registered tracker with service registry: " + trackerId + " at " + host + ":" + trackerPort);
         } else {
             logger.warning("Failed to register tracker with service registry");
         }
@@ -95,9 +119,9 @@ public class Tracker {
             stopTracker();
         }));
 
-        try (ServerSocket serverSocket = new ServerSocket(TRACKER_PORT)) {
+        try (ServerSocket serverSocket = new ServerSocket(trackerPort)) {
             serverSocket.setSoTimeout(5000); // Add timeout to allow for graceful shutdown
-            logger.info("Tracker started on port " + TRACKER_PORT);
+            logger.info("Tracker started on port " + trackerPort);
 
             while (running) {
                 try {

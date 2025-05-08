@@ -1,4 +1,4 @@
-package dev.mars.p2pjava.util;
+package dev.mars.p2pjava.circuit;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -9,7 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Implementation of the Circuit Breaker pattern to prevent cascading failures
+ * Noddy implementation of the Circuit Breaker pattern to prevent cascading failures
  * when a service is unavailable or experiencing issues.
  * 
  * The circuit breaker has three states:

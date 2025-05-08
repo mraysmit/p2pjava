@@ -29,6 +29,8 @@
         <module>p2p-client</module>
         <module>p2p-indexserver</module>
         <module>p2p-connection</module>
+        <module>p2p-cache</module>
+        <module>p2p-circuit</module>
     </modules>
 
 </project>

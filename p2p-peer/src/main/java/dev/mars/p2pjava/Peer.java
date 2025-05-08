@@ -1,6 +1,6 @@
 package dev.mars.p2pjava;
 
-import dev.mars.p2pjava.util.CircuitBreaker;
+import dev.mars.p2pjava.circuit.CircuitBreaker;
 import dev.mars.p2pjava.util.HealthCheck;
 import dev.mars.p2pjava.util.RetryHelper;
 import dev.mars.p2pjava.util.ServiceMonitor;
@@ -45,7 +45,21 @@ public class Peer {
     public Peer(String peerId, String peerHost, int peerPort, String trackerHost, int trackerPort) {
         this.peerId = peerId;
         this.peerHost = peerHost;
-        this.peerPort = peerPort;
+
+        // Check for dynamic port from system property
+        String peerPortStr = System.getProperty("peer.port");
+        int finalPeerPort = peerPort;
+        if (peerPortStr != null && !peerPortStr.isEmpty()) {
+            try {
+                int dynamicPort = Integer.parseInt(peerPortStr);
+                finalPeerPort = dynamicPort;
+                logger.info("Using dynamic port for peer: " + dynamicPort);
+            } catch (NumberFormatException e) {
+                logger.warning("Invalid peer.port system property: " + peerPortStr + ". Using provided port.");
+            }
+        }
+
+        this.peerPort = finalPeerPort;
         this.trackerHost = trackerHost;
         this.trackerPort = trackerPort;
 
@@ -58,12 +72,12 @@ public class Peer {
         // Initialize health check
         this.health = HealthCheck.registerService("Peer-" + peerId);
         this.health.addHealthDetail("host", peerHost);
-        this.health.addHealthDetail("port", peerPort);
+        this.health.addHealthDetail("port", this.peerPort);
 
         // Initialize metrics
         this.metrics = ServiceMonitor.registerService("Peer-" + peerId);
 
-        logger.info("Created peer " + peerId + " at " + peerHost + ":" + peerPort);
+        logger.info("Created peer " + peerId + " at " + peerHost + ":" + this.peerPort);
     }
 
     private void configureLogging() {

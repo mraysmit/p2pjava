@@ -1,4 +1,4 @@
-package dev.mars.p2pjava.util;
+package dev.mars.p2pjava.cache;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

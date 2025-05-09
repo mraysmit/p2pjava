@@ -4,6 +4,7 @@ import dev.mars.p2pjava.circuit.CircuitBreaker;
 import dev.mars.p2pjava.util.HealthCheck;
 import dev.mars.p2pjava.util.RetryHelper;
 import dev.mars.p2pjava.util.ServiceMonitor;
+import dev.mars.p2pjava.util.ThreadManager;
 
 import java.io.*;
 import java.net.*;
@@ -110,12 +111,11 @@ public class Peer {
         running = true;
         logger.info("Starting peer " + peerId + " on port " + peerPort);
 
-        // Initialize thread pools
-        connectionExecutor = Executors.newCachedThreadPool(r -> {
-            Thread t = new Thread(r, "PeerConnection-" + UUID.randomUUID().toString().substring(0, 8));
-            t.setDaemon(true);
-            return t;
-        });
+        // Initialize thread pools using ThreadManager for standardized thread management
+        connectionExecutor = ThreadManager.getCachedThreadPool(
+            "PeerConnectionPool-" + peerId, 
+            "PeerConnection-" + peerId
+        );
 
         // Create server socket
         try {
@@ -198,15 +198,13 @@ public class Peer {
             }
         }
 
-        // Shutdown thread pool
-        if (connectionExecutor != null) {
-            connectionExecutor.shutdownNow();
-            try {
-                connectionExecutor.awaitTermination(5, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.warning("Interrupted while waiting for executor shutdown");
-            }
+        // Shutdown thread pools using ThreadManager
+        try {
+            logger.info("Shutting down connection thread pool");
+            ThreadManager.shutdownThreadPool("PeerConnectionPool-" + peerId, 5, TimeUnit.SECONDS);
+            logger.info("Connection thread pool shut down successfully");
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error shutting down connection thread pool", e);
         }
 
         // Log final metrics
@@ -286,7 +284,13 @@ public class Peer {
      * Deregisters all files from the index server.
      */
     private void deregisterFilesFromIndexServer() {
-        if (sharedFiles.isEmpty()) {
+        // Synchronize access to sharedFiles
+        boolean isEmpty;
+        synchronized (sharedFiles) {
+            isEmpty = sharedFiles.isEmpty();
+        }
+
+        if (isEmpty) {
             logger.info("No files to deregister from index server");
             return;
         }
@@ -425,11 +429,10 @@ public class Peer {
     private void startHeartbeat() {
         logger.info("Starting heartbeat service");
 
-        heartbeatExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "Heartbeat-" + peerId);
-            t.setDaemon(true);
-            return t;
-        });
+        heartbeatExecutor = ThreadManager.getSingleThreadScheduledExecutor(
+            "HeartbeatPool-" + peerId, 
+            "Heartbeat-" + peerId
+        );
 
         heartbeatExecutor.scheduleAtFixedRate(
                 this::sendHeartbeat,
@@ -440,15 +443,12 @@ public class Peer {
     }
 
     private void stopHeartbeat() {
-        if (heartbeatExecutor != null && !heartbeatExecutor.isShutdown()) {
-            logger.info("Stopping heartbeat service");
-            heartbeatExecutor.shutdownNow();
-            try {
-                heartbeatExecutor.awaitTermination(5, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.warning("Interrupted while stopping heartbeat service");
-            }
+        logger.info("Stopping heartbeat service");
+        try {
+            ThreadManager.shutdownThreadPool("HeartbeatPool-" + peerId, 5, TimeUnit.SECONDS);
+            logger.info("Heartbeat service shut down successfully");
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error shutting down heartbeat service", e);
         }
     }
 
@@ -525,13 +525,16 @@ public class Peer {
     }
 
     public String findSharedFilePath(String fileName) {
-        for (String path : sharedFiles) {
-            File file = new File(path);
-            if (file.getName().equals(fileName)) {
-                return path;
+        // Synchronize on sharedFiles to ensure thread-safe iteration
+        synchronized (sharedFiles) {
+            for (String path : sharedFiles) {
+                File file = new File(path);
+                if (file.getName().equals(fileName)) {
+                    return path;
+                }
             }
+            return null;
         }
-        return null;
     }
 
     public void discoverPeers() {
@@ -609,11 +612,13 @@ public class Peer {
                 return new ArrayList<>(); // Return empty list as fallback
             });
 
-            // Update discovered peers list
-            discoveredPeers.clear();
-            if (result != null) {
-                discoveredPeers.addAll(result);
-                metrics.incrementCounter("discoveredPeers", result.size());
+            // Update discovered peers list - synchronize to ensure atomic operation
+            synchronized (discoveredPeers) {
+                discoveredPeers.clear();
+                if (result != null) {
+                    discoveredPeers.addAll(result);
+                    metrics.incrementCounter("discoveredPeers", result.size());
+                }
             }
 
         } catch (Exception e) {

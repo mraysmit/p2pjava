@@ -87,10 +87,14 @@ public class ConnectionPool {
         connectionWaitTime.addAndGet(waitTime);
         activeConnections.incrementAndGet();
 
-        // Only increment total connections if we're below the maximum
-        if (totalConnections.get() < maxConnections) {
-            totalConnections.incrementAndGet();
-        }
+        // Use compareAndSet to safely increment total connections if we're below the maximum
+        long currentTotal;
+        do {
+            currentTotal = totalConnections.get();
+            if (currentTotal >= maxConnections) {
+                break;
+            }
+        } while (!totalConnections.compareAndSet(currentTotal, currentTotal + 1));
 
         try {
             // Execute the task

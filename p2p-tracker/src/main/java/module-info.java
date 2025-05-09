@@ -12,4 +12,7 @@ module dev.mars.p2ptracker {
 
     // Require the p2p-discovery module
     requires dev.mars.p2pdiscovery;
+
+    // Require the p2p-util module for ThreadManager
+    requires p2p.util;
 }

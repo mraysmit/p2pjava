@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,10 +38,10 @@ public class CacheManager<K, V> {
     private final Function<K, V> loadFunction;
 
     // Statistics
-    private long cacheHits = 0;
-    private long cacheMisses = 0;
-    private long cacheEvictions = 0;
-    private long cacheRefreshes = 0;
+    private final AtomicLong cacheHits = new AtomicLong(0);
+    private final AtomicLong cacheMisses = new AtomicLong(0);
+    private final AtomicLong cacheEvictions = new AtomicLong(0);
+    private final AtomicLong cacheRefreshes = new AtomicLong(0);
 
     // Health check
     private final HealthCheck.ServiceHealth health;
@@ -108,7 +109,7 @@ public class CacheManager<K, V> {
 
         if (entry != null && !entry.isExpired()) {
             // Cache hit
-            cacheHits++;
+            cacheHits.incrementAndGet();
             cacheHit = true;
 
             // Update health details if registered
@@ -118,11 +119,11 @@ public class CacheManager<K, V> {
         }
 
         // Cache miss or expired entry
-        cacheMisses++;
+        cacheMisses.incrementAndGet();
 
         // If entry exists but is expired, increment eviction count
         if (entry != null && entry.isExpired()) {
-            cacheEvictions++;
+            cacheEvictions.incrementAndGet();
             expired = true;
         }
 
@@ -192,7 +193,7 @@ public class CacheManager<K, V> {
             if (entry.getRefreshFuture() != null && !entry.getRefreshFuture().isDone()) {
                 entry.getRefreshFuture().cancel(false);
             }
-            cacheEvictions++;
+            cacheEvictions.incrementAndGet();
             return entry.getValue();
         }
         return null;
@@ -212,7 +213,7 @@ public class CacheManager<K, V> {
         }
 
         cache.clear();
-        cacheEvictions += size;
+        cacheEvictions.addAndGet(size);
         logger.info("Cache cleared");
     }
 
@@ -231,7 +232,7 @@ public class CacheManager<K, V> {
      * @return The cache hit count
      */
     public long getCacheHits() {
-        return cacheHits;
+        return cacheHits.get();
     }
 
     /**
@@ -240,7 +241,7 @@ public class CacheManager<K, V> {
      * @return The cache miss count
      */
     public long getCacheMisses() {
-        return cacheMisses;
+        return cacheMisses.get();
     }
 
     /**
@@ -249,8 +250,10 @@ public class CacheManager<K, V> {
      * @return The cache hit ratio (0-1)
      */
     public double getCacheHitRatio() {
-        long total = cacheHits + cacheMisses;
-        return total > 0 ? (double) cacheHits / total : 0;
+        long hits = cacheHits.get();
+        long misses = cacheMisses.get();
+        long total = hits + misses;
+        return total > 0 ? (double) hits / total : 0;
     }
 
     /**
@@ -259,7 +262,7 @@ public class CacheManager<K, V> {
      * @return The cache eviction count
      */
     public long getCacheEvictions() {
-        return cacheEvictions;
+        return cacheEvictions.get();
     }
 
     /**
@@ -268,7 +271,7 @@ public class CacheManager<K, V> {
      * @return The cache refresh count
      */
     public long getCacheRefreshes() {
-        return cacheRefreshes;
+        return cacheRefreshes.get();
     }
 
     /**
@@ -299,11 +302,11 @@ public class CacheManager<K, V> {
     public String getStatistics() {
         return "CacheManager{" +
                 "size=" + cache.size() +
-                ", hits=" + cacheHits +
-                ", misses=" + cacheMisses +
+                ", hits=" + cacheHits.get() +
+                ", misses=" + cacheMisses.get() +
                 ", hit ratio=" + String.format("%.2f", getCacheHitRatio() * 100) + "%" +
-                ", evictions=" + cacheEvictions +
-                ", refreshes=" + cacheRefreshes +
+                ", evictions=" + cacheEvictions.get() +
+                ", refreshes=" + cacheRefreshes.get() +
                 '}';
     }
 
@@ -320,7 +323,7 @@ public class CacheManager<K, V> {
                         if (entry.getValue().getRefreshFuture() != null && !entry.getValue().getRefreshFuture().isDone()) {
                             entry.getValue().getRefreshFuture().cancel(false);
                         }
-                        cacheEvictions++;
+                        cacheEvictions.incrementAndGet();
                         return true;
                     }
                     return false;
@@ -347,11 +350,11 @@ public class CacheManager<K, V> {
             health.addHealthDetail("lastOperationSuccess", success);
             health.addHealthDetail("lastOperationCacheHit", cacheHit);
             health.addHealthDetail("cacheSize", cache.size());
-            health.addHealthDetail("cacheHits", cacheHits);
-            health.addHealthDetail("cacheMisses", cacheMisses);
+            health.addHealthDetail("cacheHits", cacheHits.get());
+            health.addHealthDetail("cacheMisses", cacheMisses.get());
             health.addHealthDetail("cacheHitRatio", String.format("%.2f", getCacheHitRatio() * 100) + "%");
-            health.addHealthDetail("cacheEvictions", cacheEvictions);
-            health.addHealthDetail("cacheRefreshes", cacheRefreshes);
+            health.addHealthDetail("cacheEvictions", cacheEvictions.get());
+            health.addHealthDetail("cacheRefreshes", cacheRefreshes.get());
 
             if (exception != null) {
                 health.addHealthDetail("lastError", exception.getMessage());
@@ -395,7 +398,7 @@ public class CacheManager<K, V> {
                             // Update the entry
                             long expirationTime = System.currentTimeMillis() + defaultTtlMs;
                             currentEntry.update(value, expirationTime);
-                            cacheRefreshes++;
+                            cacheRefreshes.incrementAndGet();
                             logger.fine("Refreshed value for key: " + key);
 
                             // Schedule next refresh
@@ -403,7 +406,7 @@ public class CacheManager<K, V> {
                         } else {
                             // Remove the entry if the load function returned null
                             cache.remove(key);
-                            cacheEvictions++;
+                            cacheEvictions.incrementAndGet();
                             logger.fine("Removed entry for key: " + key + " after refresh returned null");
                         }
                     } else {

@@ -13,6 +13,7 @@ import dev.mars.p2pjava.storage.FileIndexStorage;
 import dev.mars.p2pjava.storage.FileBasedIndexStorage;
 import dev.mars.p2pjava.util.ChecksumUtil;
 import dev.mars.p2pjava.util.HealthCheck;
+import dev.mars.p2pjava.util.ThreadManager;
 
 import java.io.*;
 import java.net.*;
@@ -129,8 +130,11 @@ public class P2PTestHarness {
         // Initialize P2P client with configuration
         p2pClient = new P2PClient(configManager);
 
-        // Create thread pool
-        ExecutorService executorService = Executors.newCachedThreadPool();
+        // Create thread pool using ThreadManager
+        ExecutorService executorService = ThreadManager.getCachedThreadPool(
+            "P2PTestHarnessMainPool", 
+            "P2PTestHarness"
+        );
 
         try {
             // Create test directories and files
@@ -300,7 +304,8 @@ public class P2PTestHarness {
             // Clean up
             running = false;
             stopAndCleanup();
-            executorService.shutdown();
+            // No need to explicitly shut down executorService here
+            // ThreadManager will handle shutdown of all thread pools
         }
     }
 
@@ -319,6 +324,13 @@ public class P2PTestHarness {
     }
 
     static void startTracker(String trackerServerHost, int trackerServerPort) {
+        // Get a thread pool for tracker connection handlers
+        ExecutorService trackerThreadPool = ThreadManager.getFixedThreadPool(
+            "TrackerConnectionPool", 
+            "TrackerHandler", 
+            10 // Fixed size pool for tracker connections
+        );
+
         try (ServerSocket serverSocket = new ServerSocket(trackerServerPort, 50, InetAddress.getByName(trackerServerHost))) {
             serverSocket.setSoTimeout(1000); // Timeout for accept
             System.out.println("Tracker started on " + trackerServerPort + ":" + trackerServerHost);
@@ -327,17 +339,27 @@ public class P2PTestHarness {
             while (running && !Thread.currentThread().isInterrupted()) {
                 try {
                     Socket socket = serverSocket.accept();
-                    new Thread(new TrackerHandler(socket)).start();
+                    trackerThreadPool.submit(new TrackerHandler(socket));
                 } catch (SocketTimeoutException e) {
                     // Expected, just continue loop
                 }
             }
         } catch (IOException e) {
             recordFailure("Tracker error", e);
+        } finally {
+            // No need to explicitly shut down the thread pool here
+            // ThreadManager will handle shutdown via JVM shutdown hook
         }
     }
 
     static void startIndexServer(String indexServerHost, int indexServerPort) {
+        // Get a thread pool for index server connection handlers
+        ExecutorService indexServerThreadPool = ThreadManager.getFixedThreadPool(
+            "IndexServerConnectionPool", 
+            "IndexServerHandler", 
+            10 // Fixed size pool for index server connections
+        );
+
         try (ServerSocket serverSocket = new ServerSocket(indexServerPort, 50, InetAddress.getByName(indexServerHost))) {
             serverSocket.setSoTimeout(1000); // Timeout for accept
             System.out.println("IndexServer started on port " + indexServerPort + ":" + indexServerHost);
@@ -346,13 +368,16 @@ public class P2PTestHarness {
             while (running && !Thread.currentThread().isInterrupted()) {
                 try {
                     Socket socket = serverSocket.accept();
-                    new Thread(new IndexServerHandler(socket)).start();
+                    indexServerThreadPool.submit(new IndexServerHandler(socket));
                 } catch (SocketTimeoutException e) {
                     // Expected, just continue loop
                 }
             }
         } catch (IOException e) {
             recordFailure("IndexServer error", e);
+        } finally {
+            // No need to explicitly shut down the thread pool here
+            // ThreadManager will handle shutdown via JVM shutdown hook
         }
     }
 
@@ -391,11 +416,14 @@ public class P2PTestHarness {
                 System.out.println("Added shared file: " + fileName + " to peer: " + peerId);
             }
 
-            // Store in activePeers map
-            activePeers.put(peerId, peer);
+            // Get a thread pool for peer threads
+            ExecutorService peerThreadPool = ThreadManager.getSingleThreadExecutor(
+                "PeerThreadPool-" + peerId, 
+                "Peer-" + peerId
+            );
 
-            // Create thread that will keep running
-            Thread peerThread = new Thread(() -> {
+            // Create a runnable for the peer
+            Runnable peerRunnable = () -> {
                 try {
                     // Register with tracker before start
                     peer.registerWithTracker();
@@ -408,13 +436,35 @@ public class P2PTestHarness {
                     e.printStackTrace();
                 }
                 System.out.println("Peer thread for " + peerId + " exited");
-            }, "Peer-" + peerId);
+            };
 
-            // Store thread reference
-            peerThreads.put(peerId, peerThread);
+            // Create a thread for the peer (for backward compatibility with existing code)
+            Thread peerThread = new Thread(peerRunnable, "Peer-" + peerId);
 
-            // Start the thread
-            peerThread.start();
+            // Synchronize access to both maps to ensure atomic operation
+            synchronized (P2PTestHarness.class) {
+                // Store in activePeers map
+                activePeers.put(peerId, peer);
+
+                // Store thread reference before starting to prevent thread leaks
+                // This ensures we have a reference to the thread even if an exception occurs after this point
+                peerThreads.put(peerId, peerThread);
+            }
+
+            try {
+                // Submit to thread pool and start the thread
+                peerThreadPool.submit(peerRunnable);
+                peerThread.start();
+            } catch (Exception e) {
+                // If starting the thread fails, remove it from the map
+                // Synchronize access to ensure atomic operation
+                synchronized (P2PTestHarness.class) {
+                    peerThreads.remove(peerId);
+                    // Also remove from activePeers to maintain consistency
+                    activePeers.remove(peerId);
+                }
+                throw e; // Rethrow the exception to be caught by the outer try-catch
+            }
 
             // Wait for peer to be ready with explicit waitForStartup method
             boolean isReady = waitForPeerStartup(peer, peerHost, peerPort, configManager.getInt("peer.startup.timeout.ms", 3000));
@@ -426,14 +476,20 @@ public class P2PTestHarness {
                 System.out.println("Peer " + peerId + " registration complete");
             } else {
                 recordFailure("Timeout waiting for peer " + peerId + " to start listening", null);
-                activePeers.remove(peerId);
-                peerThreads.remove(peerId);
+                // Synchronize access to both maps to ensure atomic operation
+                synchronized (P2PTestHarness.class) {
+                    activePeers.remove(peerId);
+                    peerThreads.remove(peerId);
+                }
                 // Don't count down if peer failed to start
             }
         } catch (Exception e) {
             recordFailure("Error starting peer " + peerId, e);
-            activePeers.remove(peerId);
-            peerThreads.remove(peerId);
+            // Synchronize access to both maps to ensure atomic operation
+            synchronized (P2PTestHarness.class) {
+                activePeers.remove(peerId);
+                peerThreads.remove(peerId);
+            }
         }
     }
 
@@ -594,6 +650,15 @@ public class P2PTestHarness {
             } catch (Exception e) {
                 System.err.println("Error shutting down P2PClient: " + e.getMessage());
             }
+        }
+
+        // Shutdown all thread pools managed by ThreadManager
+        try {
+            System.out.println("Shutting down all thread pools...");
+            ThreadManager.shutdownAllThreadPools();
+            System.out.println("All thread pools shut down successfully");
+        } catch (Exception e) {
+            System.err.println("Error shutting down thread pools: " + e.getMessage());
         }
 
         // Optional: clean up test files if needed

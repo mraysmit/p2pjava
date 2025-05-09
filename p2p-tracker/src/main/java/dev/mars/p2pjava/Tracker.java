@@ -14,6 +14,7 @@ package dev.mars.p2pjava;
 
 import dev.mars.p2pjava.discovery.ServiceRegistry;
 import dev.mars.p2pjava.discovery.ServiceRegistryFactory;
+import dev.mars.p2pjava.util.ThreadManager;
 
 import java.io.*;
 import java.net.*;
@@ -80,12 +81,12 @@ public class Tracker {
             trackerPort = DEFAULT_TRACKER_PORT;
             logger.info("No dynamic port specified for tracker. Using default port: " + trackerPort);
         }
-        // Initialize thread pool with custom thread factory for better debugging
-        threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE, r -> {
-            Thread t = new Thread(r, "Tracker-" + UUID.randomUUID().toString().substring(0, 8));
-            t.setDaemon(true);
-            return t;
-        });
+        // Initialize thread pool using ThreadManager for standardized thread management
+        threadPool = ThreadManager.getFixedThreadPool(
+            "TrackerThreadPool", 
+            "Tracker", 
+            THREAD_POOL_SIZE
+        );
 
         // Initialize service registry
         serviceRegistry = ServiceRegistryFactory.getInstance().getRegistry();
@@ -103,7 +104,7 @@ public class Tracker {
         }
 
         // Register this tracker instance with the service registry
-        Map<String, String> metadata = new HashMap<>();
+        Map<String, String> metadata = new ConcurrentHashMap<>();
         metadata.put("startTime", String.valueOf(System.currentTimeMillis()));
 
         boolean registered = serviceRegistry.registerService("tracker", trackerId, host, trackerPort, metadata);
@@ -149,22 +150,14 @@ public class Tracker {
 
         running = false;
 
+        // Shutdown thread pool using ThreadManager
         if (threadPool != null && !threadPool.isShutdown()) {
-            threadPool.shutdown();
             try {
-                // Wait for existing tasks to terminate
-                if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                    // Force shutdown if tasks don't terminate
-                    threadPool.shutdownNow();
-                    if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                        logger.warning("Thread pool did not terminate");
-                    }
-                }
-            } catch (InterruptedException e) {
-                // (Re-)Cancel if current thread also interrupted
-                threadPool.shutdownNow();
-                Thread.currentThread().interrupt();
-                logger.warning("Shutdown interrupted");
+                logger.info("Shutting down Tracker thread pool");
+                ThreadManager.shutdownThreadPool("TrackerThreadPool", 5, TimeUnit.SECONDS);
+                logger.info("Tracker thread pool shut down successfully");
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error shutting down thread pool", e);
             }
         }
 

@@ -1,10 +1,9 @@
 package dev.mars.p2pjava.bootstrap;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Centralized definition of all P2P system components.
@@ -20,18 +19,19 @@ public class P2PComponent {
     public static final String CONNECTION = "connection";
     public static final String DISCOVERY = "discovery";
     public static final String STORAGE = "storage";
+    public static final String AUTH = "auth";
     public static final String ALL = "all";
 
     // Component configuration
-    private static final Map<String, ComponentConfig> COMPONENT_CONFIGS = new HashMap<>();
+    private static final Map<String, ComponentConfig> COMPONENT_CONFIGS = new ConcurrentHashMap<>();
 
     // Dependencies between components (dependent -> dependencies)
-    private static final Map<String, Set<String>> COMPONENT_DEPENDENCIES = new HashMap<>();
+    private static final Map<String, Set<String>> COMPONENT_DEPENDENCIES = new ConcurrentHashMap<>();
 
     // Static initializer to populate component configurations and dependencies
     static {
         // Initialize component configurations
-        
+
         // Tracker service configuration
         COMPONENT_CONFIGS.put(TRACKER, new ComponentConfig(
                 6000, 
@@ -95,24 +95,39 @@ public class P2PComponent {
                 "initialize",
                 "shutdown"));
 
+        // Auth service configuration
+        COMPONENT_CONFIGS.put(AUTH, new ComponentConfig(
+                0, 
+                "", 
+                "authentication service",
+                "dev.mars.p2pjava.auth.AuthService",
+                "start",
+                "stop"));
+
         // Initialize component dependencies
-        
+
         // Index server depends on tracker
         addDependency(INDEX_SERVER, TRACKER);
-        
+
         // Storage depends on discovery
         addDependency(STORAGE, DISCOVERY);
-        
+
         // Index server depends on storage
         addDependency(INDEX_SERVER, STORAGE);
-        
+
         // Index server depends on cache
         addDependency(INDEX_SERVER, CACHE);
-        
+
         // Index server depends on connection
         addDependency(INDEX_SERVER, CONNECTION);
-        
+
+        // Index server depends on auth
+        addDependency(INDEX_SERVER, AUTH);
+
         // Peer depends on tracker (handled separately in P2PBootstrap)
+
+        // Peer depends on auth
+        addDependency(PEER, AUTH);
     }
 
     /**
@@ -122,7 +137,7 @@ public class P2PComponent {
      * @param dependency The component that is depended upon
      */
     private static void addDependency(String dependent, String dependency) {
-        COMPONENT_DEPENDENCIES.computeIfAbsent(dependent, k -> new HashSet<>()).add(dependency);
+        COMPONENT_DEPENDENCIES.computeIfAbsent(dependent, k -> ConcurrentHashMap.newKeySet()).add(dependency);
     }
 
     /**

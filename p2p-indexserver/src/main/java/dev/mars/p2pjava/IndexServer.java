@@ -8,6 +8,7 @@ import dev.mars.p2pjava.storage.FileIndexStorage;
 import dev.mars.p2pjava.cache.CacheManager;
 import dev.mars.p2pjava.connection.ConnectionPool;
 import dev.mars.p2pjava.util.HealthCheck;
+import dev.mars.p2pjava.util.ThreadManager;
 
 import java.io.*;
 import java.net.*;
@@ -91,12 +92,12 @@ public class IndexServer {
         health.addHealthDetail("port", indexServerPort);
         health.setHealthy(false); // Will be set to true when fully initialized
 
-        // Initialize thread pool with custom thread factory for better debugging
-        threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE, r -> {
-            Thread t = new Thread(r, "IndexServer-" + UUID.randomUUID().toString().substring(0, 8));
-            t.setDaemon(true);
-            return t;
-        });
+        // Initialize thread pool using ThreadManager for standardized thread management
+        threadPool = ThreadManager.getFixedThreadPool(
+            "IndexServerThreadPool", 
+            "IndexServer", 
+            THREAD_POOL_SIZE
+        );
 
         // Initialize connection pool
         connectionPool = new ConnectionPool(MAX_CONNECTIONS, CONNECTION_TIMEOUT_MS);
@@ -138,6 +139,8 @@ public class IndexServer {
             health.setHealthy(false);
             health.addHealthDetail("status", "error");
             health.addHealthDetail("errorMessage", e.getMessage());
+            // Properly shut down the thread pool to prevent thread leaks
+            stopIndexServer();
             return;
         }
 
@@ -197,23 +200,14 @@ public class IndexServer {
             health.addHealthDetail("shutdownTime", System.currentTimeMillis());
         }
 
-        // Shutdown thread pool
+        // Shutdown thread pool using ThreadManager
         if (threadPool != null && !threadPool.isShutdown()) {
-            threadPool.shutdown();
             try {
-                // Wait for existing tasks to terminate
-                if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                    // Force shutdown if tasks don't terminate
-                    threadPool.shutdownNow();
-                    if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                        logger.warning("Thread pool did not terminate");
-                    }
-                }
-            } catch (InterruptedException e) {
-                // (Re-)Cancel if current thread also interrupted
-                threadPool.shutdownNow();
-                Thread.currentThread().interrupt();
-                logger.warning("Shutdown interrupted");
+                logger.info("Shutting down IndexServer thread pool");
+                ThreadManager.shutdownThreadPool("IndexServerThreadPool", 5, TimeUnit.SECONDS);
+                logger.info("IndexServer thread pool shut down successfully");
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error shutting down thread pool", e);
             }
         }
 

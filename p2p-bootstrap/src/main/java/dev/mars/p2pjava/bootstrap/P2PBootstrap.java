@@ -21,11 +21,15 @@ import java.util.Map.Entry;
 public class P2PBootstrap {
     private static final Logger logger = Logger.getLogger(P2PBootstrap.class.getName());
 
-    // Available components
-    public static final String TRACKER = "tracker";
-    public static final String INDEX_SERVER = "indexserver";
-    public static final String PEER = "peer";
-    public static final String ALL = "all";
+    // Available components - using P2PComponent for centralized definitions
+    public static final String TRACKER = P2PComponent.TRACKER;
+    public static final String INDEX_SERVER = P2PComponent.INDEX_SERVER;
+    public static final String PEER = P2PComponent.PEER;
+    public static final String CACHE = P2PComponent.CACHE;
+    public static final String CONNECTION = P2PComponent.CONNECTION;
+    public static final String DISCOVERY = P2PComponent.DISCOVERY;
+    public static final String STORAGE = P2PComponent.STORAGE;
+    public static final String ALL = P2PComponent.ALL;
 
     // Available modes
     public static final String MODE_START = "start";
@@ -101,14 +105,32 @@ public class P2PBootstrap {
         // Create bootstrap service
         BootstrapService bootstrap = new BootstrapService();
 
-        // Register components
+        // Register components using P2PComponent for centralized definitions
         try {
-            if (components.contains(ALL) || components.contains(TRACKER)) {
-                bootstrap.registerService(TRACKER, Class.forName("dev.mars.p2pjava.Tracker"), "startTracker", "stopTracker");
-            }
+            // Register all components except peer (which is handled separately)
+            for (Map.Entry<String, P2PComponent.ComponentConfig> entry : P2PComponent.getAllConfigs().entrySet()) {
+                String componentId = entry.getKey();
+                P2PComponent.ComponentConfig config = entry.getValue();
 
-            if (components.contains(ALL) || components.contains(INDEX_SERVER)) {
-                bootstrap.registerService(INDEX_SERVER, Class.forName("dev.mars.p2pjava.IndexServer"), "startIndexServer", "stopIndexServer");
+                // Skip peer component (handled separately) and components not requested
+                if (componentId.equals(PEER) || 
+                    (!components.contains(ALL) && !components.contains(componentId))) {
+                    continue;
+                }
+
+                // Skip components with no class name (not meant to be registered)
+                if (config.getClassName() == null || config.getStartMethodName() == null || config.getStopMethodName() == null) {
+                    continue;
+                }
+
+                // Register the component
+                bootstrap.registerService(
+                    componentId, 
+                    Class.forName(config.getClassName()), 
+                    config.getStartMethodName(), 
+                    config.getStopMethodName()
+                );
+                logger.info("Registered component: " + componentId);
             }
         } catch (ClassNotFoundException e) {
             logger.log(Level.SEVERE, "Failed to load service class", e);
@@ -121,17 +143,26 @@ public class P2PBootstrap {
             logger.info("Peer startup will be handled separately");
         }
 
-        // Add dependencies
-        if ((components.contains(ALL) || components.contains(INDEX_SERVER)) && 
-            (components.contains(ALL) || components.contains(TRACKER))) {
-            bootstrap.addDependency(INDEX_SERVER, TRACKER);
+        // Add dependencies using P2PComponent for centralized dependency definitions
+        for (Map.Entry<String, Set<String>> entry : P2PComponent.getAllDependencies().entrySet()) {
+            String dependent = entry.getKey();
+            Set<String> dependencies = entry.getValue();
+
+            // Skip if dependent component is not being started
+            if (!components.contains(ALL) && !components.contains(dependent)) {
+                continue;
+            }
+
+            // Add each dependency if the dependency component is also being started
+            for (String dependency : dependencies) {
+                if (components.contains(ALL) || components.contains(dependency)) {
+                    bootstrap.addDependency(dependent, dependency);
+                    logger.info("Added dependency: " + dependent + " depends on " + dependency);
+                }
+            }
         }
 
-        if ((components.contains(ALL) || components.contains(PEER)) && 
-            (components.contains(ALL) || components.contains(TRACKER))) {
-            // Peers depend on the tracker
-            // This will be handled separately
-        }
+        // Peer dependencies are handled separately
 
         // Start the bootstrap service
         if (!bootstrap.start()) {
@@ -154,14 +185,32 @@ public class P2PBootstrap {
             // Create bootstrap service
             BootstrapService bootstrap = new BootstrapService();
 
-            // Register components
+            // Register components using P2PComponent for centralized definitions
             try {
-                if (components.contains(ALL) || components.contains(TRACKER)) {
-                    bootstrap.registerService(TRACKER, Class.forName("dev.mars.p2pjava.Tracker"), "startTracker", "stopTracker");
-                }
+                // Register all components except peer (which is handled separately)
+                for (Map.Entry<String, P2PComponent.ComponentConfig> entry : P2PComponent.getAllConfigs().entrySet()) {
+                    String componentId = entry.getKey();
+                    P2PComponent.ComponentConfig config = entry.getValue();
 
-                if (components.contains(ALL) || components.contains(INDEX_SERVER)) {
-                    bootstrap.registerService(INDEX_SERVER, Class.forName("dev.mars.p2pjava.IndexServer"), "startIndexServer", "stopIndexServer");
+                    // Skip peer component (handled separately) and components not requested
+                    if (componentId.equals(PEER) || 
+                        (!components.contains(ALL) && !components.contains(componentId))) {
+                        continue;
+                    }
+
+                    // Skip components with no class name (not meant to be registered)
+                    if (config.getClassName() == null || config.getStartMethodName() == null || config.getStopMethodName() == null) {
+                        continue;
+                    }
+
+                    // Register the component
+                    bootstrap.registerService(
+                        componentId, 
+                        Class.forName(config.getClassName()), 
+                        config.getStartMethodName(), 
+                        config.getStopMethodName()
+                    );
+                    logger.info("Registered component for stopping: " + componentId);
                 }
             } catch (ClassNotFoundException e) {
                 logger.log(Level.SEVERE, "Failed to load service class", e);
@@ -177,13 +226,13 @@ public class P2PBootstrap {
             // Stop the bootstrap service
             bootstrap.stop();
 
-            // Update health status
+            // Update health status using P2PComponent for centralized component definitions
             for (String component : components) {
                 if (component.equals(ALL)) {
                     // Update all components
-                    HealthCheck.updateServiceHealth(TRACKER, false);
-                    HealthCheck.updateServiceHealth(INDEX_SERVER, false);
-                    HealthCheck.updateServiceHealth(PEER, false);
+                    for (String componentId : P2PComponent.getAllConfigs().keySet()) {
+                        HealthCheck.updateServiceHealth(componentId, false);
+                    }
                 } else {
                     // Update specific component
                     HealthCheck.updateServiceHealth(component, false);
@@ -207,13 +256,13 @@ public class P2PBootstrap {
         // Get all service health statuses
         Map<String, HealthCheck.ServiceHealth> allHealth = HealthCheck.getAllServiceHealth();
 
-        // Show status for each component
+        // Show status for each component using P2PComponent for centralized component definitions
         for (String component : components) {
             if (component.equals(ALL)) {
                 // Show status for all components
-                showComponentStatus(TRACKER, allHealth.get(TRACKER));
-                showComponentStatus(INDEX_SERVER, allHealth.get(INDEX_SERVER));
-                showComponentStatus(PEER, allHealth.get(PEER));
+                for (String componentId : P2PComponent.getAllConfigs().keySet()) {
+                    showComponentStatus(componentId, allHealth.get(componentId));
+                }
             } else {
                 // Show status for specific component
                 showComponentStatus(component, allHealth.get(component));
@@ -251,7 +300,18 @@ public class P2PBootstrap {
         System.out.println("Usage: java -jar p2p-bootstrap.jar [options]");
         System.out.println("Options:");
         System.out.println("  --mode <mode>           Mode: start, stop, status (default: start)");
-        System.out.println("  --components <list>     Components to start: tracker, indexserver, peer, all (default: all)");
+
+        // Build component list dynamically from P2PComponent
+        StringBuilder componentList = new StringBuilder();
+        for (String componentId : P2PComponent.getAllConfigs().keySet()) {
+            if (componentList.length() > 0) {
+                componentList.append(", ");
+            }
+            componentList.append(componentId);
+        }
+        componentList.append(", ").append(ALL);
+
+        System.out.println("  --components <list>     Components to start: " + componentList + " (default: all)");
         System.out.println("  --config.file <path>    Path to configuration file");
         System.out.println("  --<key>=<value>         Set configuration value");
     }

@@ -1,8 +1,17 @@
 package dev.mars.p2pjava;
 
-
 import dev.mars.p2pjava.bootstrap.BootstrapService;
+import dev.mars.p2pjava.bootstrap.P2PBootstrap;
+import dev.mars.p2pjava.bootstrap.P2PComponent;
+import dev.mars.p2pjava.cache.CacheManager;
+import dev.mars.p2pjava.common.PeerInfo;
 import dev.mars.p2pjava.config.ConfigurationManager;
+import dev.mars.p2pjava.connection.ConnectionPool;
+import dev.mars.p2pjava.discovery.ServiceRegistry;
+import dev.mars.p2pjava.health.HealthCheckServer;
+import dev.mars.p2pjava.storage.FileIndexStorage;
+import dev.mars.p2pjava.storage.FileBasedIndexStorage;
+import dev.mars.p2pjava.util.ChecksumUtil;
 import dev.mars.p2pjava.util.HealthCheck;
 
 import java.io.*;
@@ -11,6 +20,7 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 
 /**
@@ -72,6 +82,9 @@ public class P2PTestHarness {
     // Bootstrap service
     private static BootstrapService bootstrapService;
 
+    // P2P Client
+    private static P2PClient p2pClient;
+
     // ports and paths configurable
     private static final String TRACKER_SERVER_HOST = System.getProperty("tracker.host", "localhost");
     private static final int TRACKER_SERVER_PORT = Integer.getInteger("tracker.port", 6000);
@@ -113,7 +126,8 @@ public class P2PTestHarness {
         HealthCheck.ServiceHealth health = HealthCheck.registerService("P2PTestHarness");
         health.addHealthDetail("startTime", System.currentTimeMillis());
 
-        var p2pClient = new P2PClient(TRACKER_SERVER_HOST, TRACKER_SERVER_PORT, INDEX_SERVER_HOST, INDEX_SERVER_PORT);
+        // Initialize P2P client with configuration
+        p2pClient = new P2PClient(configManager);
 
         // Create thread pool
         ExecutorService executorService = Executors.newCachedThreadPool();
@@ -125,23 +139,61 @@ public class P2PTestHarness {
             // Set up shutdown hook first to ensure cleanup
             setupShutdownHook();
 
-            // Start tracker and index server using bootstrap service
+            // Start all components using P2PBootstrap
             try {
-                bootstrapService = new BootstrapService();
-                bootstrapService.registerService("tracker", Class.forName("dev.mars.p2pjava.Tracker"), "startTracker", "stopTracker");
-                bootstrapService.registerService("indexserver", Class.forName("dev.mars.p2pjava.IndexServer"), "startIndexServer", "stopIndexServer");
-                bootstrapService.addDependency("indexserver", "tracker");
+                System.out.println("Starting all components using P2PBootstrap...");
 
-                System.out.println("Starting services using bootstrap service...");
+                // Create bootstrap service
+                bootstrapService = new BootstrapService();
+
+                // Register all components using P2PComponent for centralized definitions
+                for (Map.Entry<String, P2PComponent.ComponentConfig> entry : P2PComponent.getAllConfigs().entrySet()) {
+                    String componentId = entry.getKey();
+                    P2PComponent.ComponentConfig config = entry.getValue();
+
+                    // Skip peer component (handled separately) and components with no class name
+                    if (componentId.equals(P2PComponent.PEER) || 
+                        config.getClassName() == null || 
+                        config.getStartMethodName() == null || 
+                        config.getStopMethodName() == null) {
+                        continue;
+                    }
+
+                    // Register the component
+                    bootstrapService.registerService(
+                        componentId, 
+                        Class.forName(config.getClassName()), 
+                        config.getStartMethodName(), 
+                        config.getStopMethodName()
+                    );
+                    System.out.println("Registered component: " + componentId);
+                }
+
+                // Add dependencies using P2PComponent for centralized dependency definitions
+                for (Map.Entry<String, Set<String>> entry : P2PComponent.getAllDependencies().entrySet()) {
+                    String dependent = entry.getKey();
+                    Set<String> dependencies = entry.getValue();
+
+                    // Add each dependency
+                    for (String dependency : dependencies) {
+                        bootstrapService.addDependency(dependent, dependency);
+                        System.out.println("Added dependency: " + dependent + " depends on " + dependency);
+                    }
+                }
+
+                // Start the bootstrap service
+                System.out.println("Starting bootstrap service...");
                 if (!bootstrapService.start()) {
-                    throw new Exception("Failed to start services using bootstrap service");
+                    throw new Exception("Failed to start components using bootstrap service");
                 }
 
                 // Signal that services are started
                 trackerStarted.countDown();
                 indexServerStarted.countDown();
+
+                System.out.println("All components started successfully");
             } catch (Exception e) {
-                System.err.println("Failed to start services using bootstrap service: " + e.getMessage());
+                System.err.println("Failed to start components using bootstrap service: " + e.getMessage());
                 System.out.println("Falling back to manual service startup...");
 
                 // Fall back to manual service startup
@@ -304,6 +356,17 @@ public class P2PTestHarness {
         }
     }
 
+    /**
+     * Starts a peer with the specified configuration.
+     * This method demonstrates how to use the peer module to create and manage peers.
+     * 
+     * @param peerId The unique identifier for the peer
+     * @param peerHost The host address for the peer
+     * @param peerPort The port number for the peer
+     * @param trackerHost The host address for the tracker
+     * @param trackerPort The port number for the tracker
+     * @param filePaths The paths to the files to share
+     */
     public static void startPeer(String peerId, String peerHost, int peerPort, String trackerHost, int trackerPort, String... filePaths) {
         try {
             System.out.println("Starting peer: " + peerId + " on port " + peerPort);
@@ -311,12 +374,21 @@ public class P2PTestHarness {
             // Create peer with all fields properly set
             Peer peer = new Peer(peerId, peerHost, peerPort, trackerHost, trackerPort);
 
+            // Note: The Peer class uses hardcoded values for socket timeout (30000ms) and heartbeat interval (30s)
+            // These values cannot be configured through the API
+
             // Add shared files before starting
             for (String filePath : filePaths) {
                 Path path = Paths.get(filePath);
                 String fileName = path.getFileName().toString();
+
+                // Add file to peer's shared files
                 peer.addSharedFile(filePath);
-                registerFileWithIndexServer(fileName, peerId, peerPort);
+
+                // Register file with index server using P2PClient
+                p2pClient.registerFileWithIndexServer(fileName, peerId, peerPort);
+
+                System.out.println("Added shared file: " + fileName + " to peer: " + peerId);
             }
 
             // Store in activePeers map
@@ -327,6 +399,7 @@ public class P2PTestHarness {
                 try {
                     // Register with tracker before start
                     peer.registerWithTracker();
+                    System.out.println("Peer " + peerId + " registered with tracker");
 
                     // Start the peer which blocks on socket accept
                     peer.start();
@@ -344,7 +417,7 @@ public class P2PTestHarness {
             peerThread.start();
 
             // Wait for peer to be ready with explicit waitForStartup method
-            boolean isReady = waitForPeerStartup(peer, peerHost, peerPort, 3000);
+            boolean isReady = waitForPeerStartup(peer, peerHost, peerPort, configManager.getInt("peer.startup.timeout.ms", 3000));
 
             if (isReady) {
                 System.out.println("Peer " + peerId + " is now listening on port " + peerPort);
@@ -403,31 +476,6 @@ public class P2PTestHarness {
         }
     }
 
-    private static void registerFileWithIndexServer(String fileName, String peerId, int port) {
-        String indexHost = System.getProperty("index.host", "localhost");
-        int indexPort = Integer.getInteger("index.port", 6001);
-        try (Socket socket = new Socket(indexHost, indexPort);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-
-            out.println("REGISTER_FILE " + fileName + " " + peerId + " " + port);
-            String response = in.readLine();
-            System.out.println("IndexServer response: " + response);
-        } catch (IOException e) {
-            recordFailure("Failed to register file with index server", e);
-        }
-    }
-
-
-
-//    private static String extractField(String input, String pattern) {
-//        java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
-//        java.util.regex.Matcher m = p.matcher(input);
-//        if (m.find() && m.groupCount() >= 1) {
-//            return m.group(1);
-//        }
-//        return null;
-//    }
 
     // Verify that the file discovery results are as expected
     private static boolean verifyFileDiscovery(List<PeerInfo> peers) {
@@ -468,23 +516,6 @@ public class P2PTestHarness {
         }
     }
 
-    private static void simulateFileDiscoveryAndDownload() {
-        try (Socket socket = new Socket("localhost", INDEX_SERVER_PORT);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-
-            // Find peers with file
-            out.println("GET_PEERS_WITH_FILE file1.txt");
-            String response = in.readLine();
-            System.out.println("Peers with file1.txt: " + response);
-
-            // Parse response and connect to first peer
-            // In a real implementation, you would parse the PeerInfo and connect
-            System.out.println("Simulating download from peer1...");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
 
     // Cleans up test files created during the test
@@ -552,6 +583,17 @@ public class P2PTestHarness {
             HealthCheck.deregisterService("P2PTestHarness");
         } catch (Exception e) {
             System.err.println("Error deregistering from health check: " + e.getMessage());
+        }
+
+        // Shutdown P2PClient
+        if (p2pClient != null) {
+            try {
+                System.out.println("Shutting down P2PClient...");
+                p2pClient.shutdown();
+                System.out.println("P2PClient shutdown complete");
+            } catch (Exception e) {
+                System.err.println("Error shutting down P2PClient: " + e.getMessage());
+            }
         }
 
         // Optional: clean up test files if needed

@@ -26,6 +26,58 @@ import java.util.logging.Logger;
 public class BootstrapService {
     private static final Logger logger = Logger.getLogger(BootstrapService.class.getName());
 
+    // Service configuration map
+    private static final Map<String, ServiceConfig> SERVICE_CONFIGS = new HashMap<>();
+
+    // Static initializer to populate the service configurations
+    static {
+        // Tracker service configuration
+        SERVICE_CONFIGS.put("tracker", new ServiceConfig(6000, "tracker.port", "tracker"));
+
+        // Index server configuration
+        SERVICE_CONFIGS.put("indexserver", new ServiceConfig(6001, "indexserver.port", "index server"));
+
+        // Peer service configuration
+        SERVICE_CONFIGS.put("peer", new ServiceConfig(7000, "peer.port", "peer"));
+
+        // Cache service configuration
+        SERVICE_CONFIGS.put("cache", new ServiceConfig(0, "", "cache manager"));
+
+        // Connection service configuration
+        SERVICE_CONFIGS.put("connection", new ServiceConfig(0, "", "connection pool"));
+
+        // Discovery service configuration
+        SERVICE_CONFIGS.put("discovery", new ServiceConfig(0, "", "service registry"));
+
+        // Storage service configuration
+        SERVICE_CONFIGS.put("storage", new ServiceConfig(0, "", "file storage"));
+    }
+
+    // Service configuration class
+    private static class ServiceConfig {
+        private final int basePort;
+        private final String portProperty;
+        private final String serviceType;
+
+        public ServiceConfig(int basePort, String portProperty, String serviceType) {
+            this.basePort = basePort;
+            this.portProperty = portProperty;
+            this.serviceType = serviceType;
+        }
+
+        public int getBasePort() {
+            return basePort;
+        }
+
+        public String getPortProperty() {
+            return portProperty;
+        }
+
+        public String getServiceType() {
+            return serviceType;
+        }
+    }
+
     private final ConfigurationManager config;
     private final ExecutorService executorService;
     private final Map<String, ServiceInstance> services = new HashMap<>();
@@ -419,36 +471,24 @@ public class BootstrapService {
                 // Configure dynamic ports if enabled
                 ConfigurationManager config = ConfigurationManager.getInstance();
                 if (config.getBoolean("bootstrap.dynamic.ports", true)) {
-                    // Configure dynamic ports for known services
-                    int basePort;
-                    String portProperty;
-                    String serviceType;
+                    // Get service configuration from P2PComponent
+                    P2PComponent.ComponentConfig componentConfig = null;
 
-                    if (serviceId.equals("tracker")) {
-                        basePort = 6000;
-                        portProperty = "tracker.port";
-                        serviceType = "tracker";
-                    } else if (serviceId.equals("indexserver")) {
-                        basePort = 6001;
-                        portProperty = "indexserver.port";
-                        serviceType = "index server";
-                    } else if (serviceId.startsWith("peer")) {
-                        basePort = 7000;
-                        portProperty = "peer.port";
-                        serviceType = "peer";
-                    } else {
-                        // Skip dynamic port allocation for unknown services
-                        basePort = 0;
-                        portProperty = null;
-                        serviceType = null;
+                    // Check for exact match first
+                    componentConfig = P2PComponent.getConfig(serviceId);
+
+                    // For peer services that might have a suffix (e.g., peer1, peer2)
+                    if (componentConfig == null && serviceId.startsWith("peer")) {
+                        componentConfig = P2PComponent.getConfig(P2PComponent.PEER);
                     }
 
-                    if (portProperty != null) {
-                        int dynamicPort = config.findAvailablePort(basePort);
-                        config.set(portProperty, String.valueOf(dynamicPort));
+                    // Configure dynamic port if component configuration exists
+                    if (componentConfig != null && componentConfig.getBasePort() > 0 && !componentConfig.getPortProperty().isEmpty()) {
+                        int dynamicPort = config.findAvailablePort(componentConfig.getBasePort());
+                        config.set(componentConfig.getPortProperty(), String.valueOf(dynamicPort));
                         // Set system property for service to use
-                        System.setProperty(portProperty, String.valueOf(dynamicPort));
-                        logger.info("Using dynamic port for " + serviceType + ": " + dynamicPort);
+                        System.setProperty(componentConfig.getPortProperty(), String.valueOf(dynamicPort));
+                        logger.info("Using dynamic port for " + componentConfig.getServiceType() + ": " + dynamicPort);
                     }
                 }
 

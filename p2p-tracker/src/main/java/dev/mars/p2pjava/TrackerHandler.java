@@ -79,43 +79,61 @@ class TrackerHandler implements Runnable {
                             out.println("REGISTERED " + peerId);
                         } catch (NumberFormatException e) {
                             logger.warning("Invalid port format in REGISTER command: " + inputLine);
-                            out.println("ERROR Invalid port format");
+                            out.println("ERROR INVALID_PARAMETERS Invalid port format");
+                        } catch (Exception e) {
+                            logger.log(Level.SEVERE, "Error processing REGISTER command", e);
+                            out.println("ERROR INTERNAL_ERROR Failed to register peer");
                         }
                         break;
                     case "DEREGISTER":
-                        if (parts.length > 1) {
-                            String peerId = parts[1];
-                            boolean success = Tracker.deregisterPeer(peerId);
-                            if (success) {
-                                logger.info("Deregistered peer: " + peerId);
-                                out.println("DEREGISTERED " + peerId);
+                        try {
+                            if (parts.length > 1) {
+                                String peerId = parts[1];
+                                boolean success = Tracker.deregisterPeer(peerId);
+                                if (success) {
+                                    logger.info("Deregistered peer: " + peerId);
+                                    out.println("DEREGISTERED " + peerId);
+                                } else {
+                                    logger.warning("Failed to deregister peer: " + peerId);
+                                    out.println("ERROR RESOURCE_NOT_FOUND Failed to deregister peer");
+                                }
                             } else {
-                                logger.warning("Failed to deregister peer: " + peerId);
-                                out.println("ERROR Failed to deregister peer");
+                                logger.warning("Invalid DEREGISTER command: " + inputLine);
+                                out.println("ERROR INVALID_PARAMETERS Insufficient parameters for DEREGISTER");
                             }
-                        } else {
-                            logger.warning("Invalid DEREGISTER command: " + inputLine);
-                            out.println("ERROR Insufficient parameters for DEREGISTER");
+                        } catch (Exception e) {
+                            logger.log(Level.SEVERE, "Error processing DEREGISTER command", e);
+                            out.println("ERROR INTERNAL_ERROR Failed to deregister peer");
                         }
                         break;
                     case "DISCOVER":
-                        logger.info("Processing DISCOVER command");
-                        out.println("PEERS " + peers.values());
+                        try {
+                            logger.info("Processing DISCOVER command");
+                            out.println("PEERS " + peers.values());
+                        } catch (Exception e) {
+                            logger.log(Level.SEVERE, "Error processing DISCOVER command", e);
+                            out.println("ERROR INTERNAL_ERROR Failed to discover peers");
+                        }
                         break;
                     case "IS_PEER_ALIVE":
-                        if (parts.length > 1) {
-                            String peerId = parts[1];
-                            boolean isAlive = Tracker.isPeerAlive(peerId);
-                            logger.info("Checking if peer is alive: " + peerId + " - " + (isAlive ? "ALIVE" : "NOT_ALIVE"));
-                            out.println(isAlive ? "ALIVE" : "NOT_ALIVE");
-                        } else {
-                            logger.warning("Invalid IS_PEER_ALIVE command: " + inputLine);
-                            out.println("ERROR Insufficient parameters for IS_PEER_ALIVE");
+                        try {
+                            if (parts.length > 1) {
+                                String peerId = parts[1];
+                                boolean isAlive = Tracker.isPeerAlive(peerId);
+                                logger.info("Checking if peer is alive: " + peerId + " - " + (isAlive ? "ALIVE" : "NOT_ALIVE"));
+                                out.println(isAlive ? "ALIVE" : "NOT_ALIVE");
+                            } else {
+                                logger.warning("Invalid IS_PEER_ALIVE command: " + inputLine);
+                                out.println("ERROR INVALID_PARAMETERS Insufficient parameters for IS_PEER_ALIVE");
+                            }
+                        } catch (Exception e) {
+                            logger.log(Level.SEVERE, "Error processing IS_PEER_ALIVE command", e);
+                            out.println("ERROR INTERNAL_ERROR Failed to check peer status");
                         }
                         break;
                     default:
                         logger.warning("Unknown command: " + command);
-                        out.println("UNKNOWN_COMMAND");
+                        out.println("ERROR UNKNOWN_COMMAND Unknown command: " + command);
                 }
             }
         } catch (IOException e) {

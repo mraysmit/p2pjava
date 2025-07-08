@@ -76,6 +76,14 @@ peer:
     discoveryIntervalMs: 60000
     maxPeers: 50
     bootstrapPeers: []
+    # Distributed service registry configuration
+    distributed:
+      enabled: false
+      gossipPort: 6003
+      gossipIntervalMs: 5000
+      fanout: 3
+      messageTtlMs: 30000
+      bootstrapPeers: []
 
 # Health Check Configuration
 healthcheck:
@@ -197,6 +205,22 @@ security:
     requestsPerMinute: 100
     burstSize: 20
     blockDurationMs: 60000
+
+# Service Registry Configuration
+serviceRegistry:
+  type: "memory"  # Options: memory, distributed
+  distributed:
+    enabled: false
+    gossipPort: 6003
+    gossipIntervalMs: 5000
+    fanout: 3
+    messageTtlMs: 30000
+    bootstrapPeers: []
+    conflictResolution: "TIMESTAMP"  # Options: TIMESTAMP, COMPOSITE, PRIORITY
+    antiEntropy:
+      enabled: true
+      intervalMs: 60000
+      reconciliationTimeoutMs: 10000
 
 # Custom Properties (for application-specific settings)
 custom:

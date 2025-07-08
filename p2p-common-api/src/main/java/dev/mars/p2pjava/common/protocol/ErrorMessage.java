@@ -65,25 +65,38 @@ public class ErrorMessage extends JsonMessage {
     public void setComponent(String component) { this.component = component; }
     
     /**
-     * Common error codes.
+     * Common error codes with categorization for retry logic.
      */
     public static class ErrorCodes {
+        // Client errors (4xx) - typically not retryable
         public static final String INVALID_MESSAGE = "INVALID_MESSAGE";
         public static final String UNKNOWN_COMMAND = "UNKNOWN_COMMAND";
         public static final String AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED";
         public static final String AUTHORIZATION_FAILED = "AUTHORIZATION_FAILED";
         public static final String RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND";
+        public static final String FILE_NOT_FOUND = "FILE_NOT_FOUND";
+        public static final String INVALID_PARAMETERS = "INVALID_PARAMETERS";
+        public static final String CHECKSUM_MISMATCH = "CHECKSUM_MISMATCH";
+
+        // Server errors (5xx) - potentially retryable
         public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
+        public static final String SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE";
+        public static final String FILE_ACCESS_ERROR = "FILE_ACCESS_ERROR";
+        public static final String TRANSFER_FAILED = "TRANSFER_FAILED";
+
+        // Network errors - retryable
         public static final String NETWORK_ERROR = "NETWORK_ERROR";
         public static final String TIMEOUT = "TIMEOUT";
-        public static final String RATE_LIMITED = "RATE_LIMITED";
-        public static final String SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE";
-        public static final String FILE_NOT_FOUND = "FILE_NOT_FOUND";
-        public static final String FILE_ACCESS_ERROR = "FILE_ACCESS_ERROR";
-        public static final String CHECKSUM_MISMATCH = "CHECKSUM_MISMATCH";
-        public static final String TRANSFER_FAILED = "TRANSFER_FAILED";
+        public static final String CONNECTION_FAILED = "CONNECTION_FAILED";
         public static final String PEER_UNAVAILABLE = "PEER_UNAVAILABLE";
-        public static final String INVALID_PARAMETERS = "INVALID_PARAMETERS";
+
+        // Rate limiting - retryable with backoff
+        public static final String RATE_LIMITED = "RATE_LIMITED";
+        public static final String CIRCUIT_BREAKER_OPEN = "CIRCUIT_BREAKER_OPEN";
+
+        // System errors - may require manual intervention
+        public static final String SYSTEM_OVERLOAD = "SYSTEM_OVERLOAD";
+        public static final String RESOURCE_EXHAUSTED = "RESOURCE_EXHAUSTED";
     }
     
     /**

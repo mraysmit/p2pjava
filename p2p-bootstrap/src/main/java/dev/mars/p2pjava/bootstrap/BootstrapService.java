@@ -153,8 +153,9 @@ public class BootstrapService {
      * Starts all registered services in the correct order based on dependencies.
      *
      * @return true if all services started successfully, false otherwise
+     * @throws CircularDependencyException if circular dependencies are detected
      */
-    public boolean start() {
+    public boolean start() throws CircularDependencyException {
         if (running) {
             logger.warning("Bootstrap service already running");
             return true;
@@ -168,14 +169,23 @@ public class BootstrapService {
             healthCheckServer.start();
         }
 
-        // Build dependency graph
-        Map<String, List<String>> dependencyGraph = buildDependencyGraph();
+        // Validate dependencies for circular references
+        DependencyAnalyzer analyzer = new DependencyAnalyzer(services.keySet(), dependencies);
+        DependencyAnalyzer.AnalysisResult analysisResult = analyzer.analyze();
 
-        // Find services with no dependencies (roots)
-        List<String> rootServices = findRootServices(dependencyGraph);
+        if (!analysisResult.isValid()) {
+            logger.severe("Circular dependency detected: " + analysisResult.getErrorMessage());
+            stop();
+            throw new CircularDependencyException(analysisResult.getErrorMessage(), analysisResult.getCircularDependencies());
+        }
 
-        // Start services in dependency order
-        boolean success = startServicesInOrder(rootServices, dependencyGraph);
+        logger.info("Dependency validation passed - no circular dependencies detected");
+
+        // Use the topologically sorted order from the analyzer
+        List<String> startupOrder = analysisResult.getTopologicalOrder();
+
+        // Start services in the validated order
+        boolean success = startServicesInTopologicalOrder(startupOrder);
 
         if (success) {
             logger.info("All services started successfully");
@@ -414,6 +424,59 @@ public class BootstrapService {
     }
 
     /**
+     * Starts services in the provided topological order.
+     * This method uses the validated topological order from the dependency analyzer
+     * to start services in the correct sequence.
+     *
+     * @param topologicalOrder The topologically sorted list of service IDs
+     * @return true if all services started successfully, false otherwise
+     */
+    private boolean startServicesInTopologicalOrder(List<String> topologicalOrder) {
+        logger.info("Starting services in topological order: " + topologicalOrder);
+
+        for (String serviceId : topologicalOrder) {
+            ServiceInstance service = services.get(serviceId);
+            if (service != null) {
+                if (!startService(service)) {
+                    logger.severe("Failed to start service: " + serviceId);
+                    return false;
+                }
+
+                // Wait for service to be ready before starting the next one
+                long timeoutMs = config.getInt("bootstrap.service.startup.timeout.seconds", 10) * 1000L;
+                long startTime = System.currentTimeMillis();
+
+                while (running && !service.isReady() && !service.isFailed() &&
+                       System.currentTimeMillis() - startTime < timeoutMs) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        logger.warning("Interrupted while waiting for service to be ready: " + serviceId);
+                        return false;
+                    }
+                }
+
+                if (service.isFailed()) {
+                    logger.severe("Service failed during startup: " + serviceId);
+                    return false;
+                }
+
+                if (!service.isReady()) {
+                    logger.severe("Service startup timeout: " + serviceId);
+                    return false;
+                }
+
+                logger.info("Service started successfully: " + serviceId);
+            } else {
+                logger.warning("Service not found in registry: " + serviceId);
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Starts a service.
      *
      * @param service The service to start
@@ -519,7 +582,7 @@ public class BootstrapService {
     /**
      * Represents a dependency between services.
      */
-    private static class ServiceDependency {
+    public static class ServiceDependency {
         private final String dependentServiceId;
         private final String dependencyServiceId;
 

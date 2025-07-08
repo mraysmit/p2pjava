@@ -165,12 +165,18 @@ public class P2PBootstrap {
         // Peer dependencies are handled separately
 
         // Start the bootstrap service
-        if (!bootstrap.start()) {
-            logger.severe("Failed to start components");
+        try {
+            if (!bootstrap.start()) {
+                logger.severe("Failed to start components");
+                System.exit(1);
+            }
+
+            logger.info("Components started successfully");
+        } catch (CircularDependencyException e) {
+            logger.severe("Cannot start components due to circular dependencies: " + e.getMessage());
+            logger.severe(e.getFormattedCircularDependencies());
             System.exit(1);
         }
-
-        logger.info("Components started successfully");
     }
 
     /**

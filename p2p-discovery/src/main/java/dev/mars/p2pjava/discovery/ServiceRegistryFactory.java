@@ -56,6 +56,11 @@ public class ServiceRegistryFactory {
             case "memory":
                 registry = InMemoryServiceRegistry.getInstance();
                 break;
+            case "distributed":
+                // Create distributed registry with default configuration
+                String peerId = System.getProperty("peer.id", "peer-" + System.currentTimeMillis());
+                registry = new DistributedServiceRegistry(peerId);
+                break;
             // Add support for other registry types here
             default:
                 throw new IllegalArgumentException("Unsupported registry type: " + type);
@@ -88,5 +93,29 @@ public class ServiceRegistryFactory {
             registry = null;
             logger.info("Shut down service registry");
         }
+    }
+
+    /**
+     * Creates a distributed service registry with custom configuration.
+     *
+     * @param peerId The unique identifier for this peer
+     * @param gossipPort The port for gossip protocol communication
+     * @param bootstrapPeers Set of bootstrap peer addresses to connect to
+     * @return A configured DistributedServiceRegistry instance
+     */
+    public static DistributedServiceRegistry createDistributedRegistry(String peerId,
+                                                                      int gossipPort,
+                                                                      java.util.Set<String> bootstrapPeers) {
+        return new DistributedServiceRegistry(peerId, gossipPort, bootstrapPeers);
+    }
+
+    /**
+     * Creates a distributed service registry with default configuration.
+     *
+     * @param peerId The unique identifier for this peer
+     * @return A configured DistributedServiceRegistry instance
+     */
+    public static DistributedServiceRegistry createDistributedRegistry(String peerId) {
+        return new DistributedServiceRegistry(peerId);
     }
 }

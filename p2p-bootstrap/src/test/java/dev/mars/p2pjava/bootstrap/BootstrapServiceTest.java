@@ -59,7 +59,7 @@ public class BootstrapServiceTest {
     }
 
     @Test
-    void testStartWithoutDependencies() {
+    void testStartWithoutDependencies() throws CircularDependencyException {
         // Register a test service
         TestService.startCalled = false;
         bootstrapService.registerService("test-service", TestService.class, "start", "stop");
@@ -73,7 +73,7 @@ public class BootstrapServiceTest {
     }
 
     @Test
-    void testStartWithDependencies() {
+    void testStartWithDependencies() throws CircularDependencyException {
         // Register test services with dependencies
         TestService.startCalled = false;
         DependentService.startCalled = false;
@@ -99,15 +99,14 @@ public class BootstrapServiceTest {
         bootstrapService.addDependency("service2", "service1");
         bootstrapService.addDependency("service1", "service2");
 
-        // Start the bootstrap service
-        boolean started = bootstrapService.start();
-
-        // Verify the bootstrap service failed to start due to circular dependencies
-        assertFalse(started, "Bootstrap service should fail to start with circular dependencies");
+        // Start the bootstrap service - should throw CircularDependencyException
+        assertThrows(CircularDependencyException.class, () -> {
+            bootstrapService.start();
+        }, "Bootstrap service should throw CircularDependencyException with circular dependencies");
     }
 
     @Test
-    void testStartWithNonexistentDependency() {
+    void testStartWithNonexistentDependency() throws CircularDependencyException {
         // Register a test service with a nonexistent dependency
         bootstrapService.registerService("service1", TestService.class, "start", "stop");
         bootstrapService.addDependency("service1", "nonexistent-service");
@@ -120,7 +119,7 @@ public class BootstrapServiceTest {
     }
 
     @Test
-    void testStartWithFailingService() {
+    void testStartWithFailingService() throws CircularDependencyException {
         // Register a test service that fails to start
         bootstrapService.registerService("failing-service", FailingService.class, "start", "stop");
 
@@ -132,7 +131,7 @@ public class BootstrapServiceTest {
     }
 
     @Test
-    void testStop() {
+    void testStop() throws CircularDependencyException {
         // Register a test service
         TestService.stopCalled = false;
         bootstrapService.registerService("test-service", TestService.class, "start", "stop");

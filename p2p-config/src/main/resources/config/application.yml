@@ -1,0 +1,206 @@
+# P2P Java Application Configuration
+# This is the main configuration file in YAML format
+
+application:
+  name: "p2p-java-app"
+  version: "1.0.0"
+  environment: "development"
+  profile: "default"
+
+# Tracker Configuration
+tracker:
+  host: "localhost"
+  port: 6000
+  threadPool:
+    size: 10
+    maxSize: 20
+    queueSize: 1000
+    keepAliveMs: 60000
+  peerTimeoutMs: 90000
+  maxPeers: 1000
+  cleanupIntervalMs: 60000
+
+# Index Server Configuration
+indexserver:
+  host: "localhost"
+  port: 6001
+  threadPool:
+    size: 10
+    maxSize: 20
+    queueSize: 1000
+    keepAliveMs: 60000
+  storage:
+    directory: "data"
+    filename: "file_index.dat"
+    backupEnabled: true
+    backupIntervalMs: 3600000
+  cache:
+    ttlMs: 60000
+    refreshMs: 300000
+    maxSize: 10000
+  connection:
+    poolMax: 100
+    timeoutMs: 5000
+    retryAttempts: 3
+    retryDelayMs: 1000
+
+# Peer Configuration
+peer:
+  socketTimeoutMs: 30000
+  heartbeat:
+    intervalSeconds: 30
+    timeoutMs: 10000
+    maxMissed: 3
+    enabled: true
+  connection:
+    poolMax: 50
+    timeoutMs: 5000
+    retryAttempts: 3
+    retryDelayMs: 1000
+  threadPool:
+    size: 5
+    maxSize: 10
+    queueSize: 500
+    keepAliveMs: 60000
+  fileSharing:
+    enabled: true
+    shareDirectory: "shared"
+    maxFileSize: 104857600  # 100MB
+    allowedExtensions: [".txt", ".pdf", ".jpg", ".png", ".mp3", ".mp4"]
+    uploadRateLimit: 1048576    # 1MB/s
+    downloadRateLimit: 2097152  # 2MB/s
+    maxConcurrentTransfers: 5
+  discovery:
+    enabled: true
+    broadcastPort: 6002
+    discoveryIntervalMs: 60000
+    maxPeers: 50
+    bootstrapPeers: []
+
+# Health Check Configuration
+healthcheck:
+  enabled: true
+  port: 8080
+  path: "/health"
+  intervalMs: 30000
+  timeoutMs: 5000
+  checks:
+    database: true
+    tracker: true
+    indexServer: true
+    diskSpace: true
+    memory: true
+    threadPools: true
+
+# Bootstrap Configuration
+bootstrap:
+  autoStart: true
+  startupTimeoutSeconds: 30
+  dynamicPorts: false
+  retryAttempts: 3
+  retryDelayMs: 5000
+  services:
+    tracker:
+      enabled: true
+      startupOrder: 1
+      startupDelayMs: 0
+      dependsOn: []
+    indexServer:
+      enabled: true
+      startupOrder: 2
+      startupDelayMs: 1000
+      dependsOn: ["tracker"]
+    peer:
+      enabled: true
+      startupOrder: 3
+      startupDelayMs: 2000
+      dependsOn: ["tracker", "indexServer"]
+    healthCheck:
+      enabled: true
+      startupOrder: 4
+      startupDelayMs: 0
+      dependsOn: []
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  pattern: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    enabled: true
+    path: "logs/p2p-java.log"
+    maxSize: "10MB"
+    maxFiles: 10
+    compress: true
+  console:
+    enabled: true
+    colorEnabled: true
+    level: "INFO"
+  loggers:
+    tracker: "INFO"
+    indexServer: "INFO"
+    peer: "INFO"
+    threadManager: "INFO"
+    configManager: "INFO"
+    healthCheck: "WARN"
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  intervalMs: 30000
+  metrics:
+    threadPools: true
+    memory: true
+    network: true
+    fileTransfers: true
+    performance: true
+    retentionDays: 7
+  alerts:
+    enabled: true
+    thresholds:
+      memoryUsagePercent: 85.0
+      threadPoolUtilizationPercent: 80.0
+      diskUsagePercent: 90.0
+      errorRatePercent: 5.0
+      responseTimeMs: 5000
+    notifications:
+      email: false
+      webhook: false
+      log: true
+      webhookUrl: ""
+      emailRecipients: []
+  export:
+    enabled: false
+    format: "prometheus"
+    endpoint: "/metrics"
+    port: 9090
+
+# Security Configuration (disabled by default)
+security:
+  enabled: false
+  encryption:
+    enabled: false
+    algorithm: "AES-256-GCM"
+    keySize: 256
+    keyRotationDays: 30
+  authentication:
+    enabled: false
+    method: "token"
+    tokenExpiryHours: 24
+    allowAnonymous: true
+  authorization:
+    enabled: false
+    defaultRole: "user"
+    adminRole: "admin"
+    guestAccess: true
+  rateLimit:
+    enabled: false
+    requestsPerMinute: 100
+    burstSize: 20
+    blockDurationMs: 60000
+
+# Custom Properties (for application-specific settings)
+custom:
+  # Add any custom properties here
+  # Example:
+  # myCustomProperty: "value"
+  # myCustomNumber: 42

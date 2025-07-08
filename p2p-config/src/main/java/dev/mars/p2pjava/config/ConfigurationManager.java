@@ -64,6 +64,13 @@ public class ConfigurationManager {
     }
 
     /**
+     * Resets the singleton instance (for testing purposes).
+     */
+    public static synchronized void resetInstance() {
+        instance = null;
+    }
+
+    /**
      * Loads default configuration values.
      */
     private void loadDefaults() {

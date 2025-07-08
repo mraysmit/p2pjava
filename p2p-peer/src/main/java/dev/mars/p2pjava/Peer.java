@@ -5,6 +5,7 @@ import dev.mars.p2pjava.util.HealthCheck;
 import dev.mars.p2pjava.util.RetryHelper;
 import dev.mars.p2pjava.util.ServiceMonitor;
 import dev.mars.p2pjava.util.ThreadManager;
+import dev.mars.p2pjava.util.AsyncOperationManager;
 
 import java.io.*;
 import java.net.*;
@@ -113,7 +114,7 @@ public class Peer {
 
         // Initialize thread pools using ThreadManager for standardized thread management
         connectionExecutor = ThreadManager.getCachedThreadPool(
-            "PeerConnectionPool-" + peerId, 
+            "PeerConnectionPool-" + peerId,
             "PeerConnection-" + peerId
         );
 
@@ -122,17 +123,49 @@ public class Peer {
             serverSocket = new ServerSocket(peerPort);
             serverSocket.setSoTimeout(SOCKET_TIMEOUT_MS);
 
-            // Start accept loop in a separate thread
-            connectionExecutor.submit(this::acceptLoop);
+            // Start the peer startup sequence using CompletableFuture chain
+            startPeerAsync()
+                .exceptionally(ex -> {
+                    logger.severe("Error in peer startup: " + ex.getMessage());
+                    stop(); // Cleanup on failure
+                    return null;
+                });
 
-            // Register with tracker
-            registerWithTracker();
+        } catch (IOException e) {
+            running = false;
+            throw e;
+        }
+    }
 
-            // Start heartbeat mechanism
-            startHeartbeat();
+    /**
+     * Asynchronous peer startup sequence using CompletableFuture.
+     */
+    private CompletableFuture<Void> startPeerAsync() {
+        String poolName = "PeerConnectionPool-" + peerId;
 
-            // Signal startup completion
-            startupLatch.countDown();
+        return AsyncOperationManager.executeSequentialChain(
+            poolName,
+            // First: Start accept loop
+            () -> {
+                connectionExecutor.submit(this::acceptLoop);
+                logger.info("Accept loop started");
+                return "acceptLoopStarted";
+            },
+            // Second: Register with tracker
+            (acceptResult) -> {
+                registerWithTrackerAsync().join(); // Wait for completion
+                logger.info("Registered with tracker");
+                return "trackerRegistered";
+            },
+            // Third: Start heartbeat and signal completion
+            (trackerResult) -> {
+                startHeartbeat();
+                startupLatch.countDown();
+                logger.info("Peer startup completed successfully");
+                return "startupComplete";
+            },
+            "PeerStartup-" + peerId
+        ).thenApply(result -> null); // Convert to Void
 
         } catch (IOException e) {
             stop();
@@ -355,75 +388,91 @@ public class Peer {
     }
 
     public void registerWithTracker() {
+        registerWithTrackerAsync().join(); // Synchronous wrapper for backward compatibility
+    }
+
+    /**
+     * Asynchronous version of tracker registration.
+     */
+    public CompletableFuture<Void> registerWithTrackerAsync() {
         logger.info("Registering with tracker at " + trackerHost + ":" + trackerPort);
 
-        // Record operation in metrics
-        metrics.recordOperation("registerWithTracker");
-        long startTime = System.currentTimeMillis();
-        boolean isError = false;
+        return AsyncOperationManager.executeWithTimeout(
+            "PeerConnectionPool-" + peerId,
+            () -> {
+                // Record operation in metrics
+                metrics.recordOperation("registerWithTracker");
+                long startTime = System.currentTimeMillis();
+                boolean isError = false;
 
-        try {
-            // Use circuit breaker to prevent repeated calls to failing tracker
-            trackerCircuitBreaker.executeWithFallback(() -> {
-                // Use retry helper for transient network issues
                 try {
-                    RetryHelper.executeWithRetry(() -> {
-                        try (Socket socket = new Socket(trackerHost, trackerPort);
-                             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                    // Use circuit breaker to prevent repeated calls to failing tracker
+                    trackerCircuitBreaker.executeWithFallback(() -> {
+                        // Use retry helper for transient network issues
+                        try {
+                            RetryHelper.executeWithRetry(() -> {
+                                try (Socket socket = new Socket(trackerHost, trackerPort);
+                                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                                     BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-                            // Set socket timeout
-                            socket.setSoTimeout(SOCKET_TIMEOUT_MS);
+                                    // Set socket timeout
+                                    socket.setSoTimeout(SOCKET_TIMEOUT_MS);
 
-                            // Send registration request
-                            out.println("REGISTER " + peerId + " " + peerHost + " " + peerPort);
+                                    // Send registration request
+                                    out.println("REGISTER " + peerId + " " + peerHost + " " + peerPort);
 
-                            // Read response
-                            String response = in.readLine();
-                            if ("REGISTERED".equals(response)) {
-                                logger.info("Successfully registered with tracker");
-                                // Update health status
-                                health.setHealthy(true);
-                                health.addHealthDetail("trackerRegistered", true);
-                                // Reset circuit breaker on success
-                                trackerCircuitBreaker.reset();
-                            } else {
-                                logger.warning("Unexpected registration response: " + response);
-                                throw new IOException("Unexpected registration response: " + response);
-                            }
+                                    // Read response
+                                    String response = in.readLine();
+                                    if ("REGISTERED".equals(response)) {
+                                        logger.info("Successfully registered with tracker");
+                                        // Update health status
+                                        health.setHealthy(true);
+                                        health.addHealthDetail("trackerRegistered", true);
+                                        // Reset circuit breaker on success
+                                        trackerCircuitBreaker.reset();
+                                    } else {
+                                        logger.warning("Unexpected registration response: " + response);
+                                        throw new IOException("Unexpected registration response: " + response);
+                                    }
+                                }
+                                return null;
+                            }, 3, 1000, 10000, e -> e instanceof IOException);
+                        } catch (Exception e) {
+                            logger.severe("Failed to register with tracker after retries: " + e.getMessage());
+                            // Update health status
+                            health.setHealthy(false);
+                            health.addHealthDetail("trackerRegistered", false);
+                            health.addHealthDetail("lastTrackerError", e.getMessage());
+                            throw new RuntimeException(e);
                         }
                         return null;
-                    }, 3, 1000, 10000, e -> e instanceof IOException);
+                    }, () -> {
+                        logger.severe("Circuit breaker open, tracker service appears to be down");
+                        // Update health status
+                        health.setHealthy(false);
+                        health.addHealthDetail("trackerRegistered", false);
+                        health.addHealthDetail("lastTrackerError", "Circuit breaker open");
+                        return null;
+                    });
                 } catch (Exception e) {
-                    logger.severe("Failed to register with tracker after retries: " + e.getMessage());
-                    // Update health status
-                    health.setHealthy(false);
-                    health.addHealthDetail("trackerRegistered", false);
-                    health.addHealthDetail("lastTrackerError", e.getMessage());
-                    throw new RuntimeException(e);
+                    logger.severe("Failed to register with tracker: " + e.getMessage());
+                    isError = true;
+                    throw e;
+                } finally {
+                    // Record metrics
+                    long responseTime = System.currentTimeMillis() - startTime;
+                    metrics.recordRequest(responseTime, isError);
+                    if (isError) {
+                        metrics.incrementCounter("trackerRegistrationFailures");
+                    } else {
+                        metrics.incrementCounter("trackerRegistrationSuccesses");
+                    }
                 }
-                return null;
-            }, () -> {
-                logger.severe("Circuit breaker open, tracker service appears to be down");
-                // Update health status
-                health.setHealthy(false);
-                health.addHealthDetail("trackerRegistered", false);
-                health.addHealthDetail("lastTrackerError", "Circuit breaker open");
-                return null;
-            });
-        } catch (Exception e) {
-            logger.severe("Failed to register with tracker: " + e.getMessage());
-            isError = true;
-        } finally {
-            // Record metrics
-            long responseTime = System.currentTimeMillis() - startTime;
-            metrics.recordRequest(responseTime, isError);
-            if (isError) {
-                metrics.incrementCounter("trackerRegistrationFailures");
-            } else {
-                metrics.incrementCounter("trackerRegistrationSuccesses");
-            }
-        }
+                return null; // Void return
+            },
+            SOCKET_TIMEOUT_MS,
+            "TrackerRegistration-" + peerId
+        );
     }
 
     private void startHeartbeat() {

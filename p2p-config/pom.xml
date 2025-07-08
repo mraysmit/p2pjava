@@ -21,9 +21,41 @@
             <artifactId>p2p-common-api</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+
+        <!-- YAML Configuration Support -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.16.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.16.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>2.16.1</version>
+        </dependency>
+
+        <!-- File Watching for Dynamic Reloading -->
+        <dependency>
+            <groupId>io.methvin</groupId>
+            <artifactId>directory-watcher</artifactId>
+            <version>0.18.0</version>
+        </dependency>
+
+        <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <version>5.11.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
             <version>5.11.4</version>
             <scope>test</scope>
         </dependency>
@@ -42,6 +74,14 @@
                         <arg>--add-modules</arg>
                         <arg>java.logging</arg>
                     </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>dev.mars.p2pjava.config.ConfigurationManagementDemo</mainClass>
                 </configuration>
             </plugin>
         </plugins>

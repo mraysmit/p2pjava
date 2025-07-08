@@ -5,6 +5,9 @@ import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.function.Supplier;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * ThreadManager provides a centralized way to manage thread pools across the P2P-Java application.
@@ -211,7 +214,167 @@ public class ThreadManager {
     public static int getActiveThreadPoolCount() {
         return threadPools.size();
     }
-    
+
+    /**
+     * Gets an existing thread pool by name.
+     *
+     * @param poolName The name of the thread pool
+     * @return The ExecutorService, or null if not found
+     */
+    public static ExecutorService getThreadPool(String poolName) {
+        return threadPools.get(poolName);
+    }
+
+    /**
+     * Executes a task asynchronously using CompletableFuture with the specified thread pool.
+     *
+     * @param <T> The return type of the task
+     * @param poolName The name of the thread pool to use
+     * @param task The task to execute
+     * @return A CompletableFuture representing the pending result
+     */
+    public static <T> CompletableFuture<T> executeAsync(String poolName, Supplier<T> task) {
+        ExecutorService executor = threadPools.get(poolName);
+        if (executor == null) {
+            throw new IllegalArgumentException("Thread pool not found: " + poolName);
+        }
+        return CompletableFuture.supplyAsync(task, executor);
+    }
+
+    /**
+     * Executes a task asynchronously using CompletableFuture with the specified thread pool.
+     *
+     * @param poolName The name of the thread pool to use
+     * @param task The task to execute
+     * @return A CompletableFuture representing the pending completion
+     */
+    public static CompletableFuture<Void> executeAsync(String poolName, Runnable task) {
+        ExecutorService executor = threadPools.get(poolName);
+        if (executor == null) {
+            throw new IllegalArgumentException("Thread pool not found: " + poolName);
+        }
+        return CompletableFuture.runAsync(task, executor);
+    }
+
+    /**
+     * Creates a CompletableFuture chain for sequential async operations.
+     *
+     * @param <T> The return type of the first task
+     * @param <U> The return type of the second task
+     * @param poolName The name of the thread pool to use
+     * @param firstTask The first task to execute
+     * @param secondTask The second task that depends on the first
+     * @return A CompletableFuture representing the final result
+     */
+    public static <T, U> CompletableFuture<U> executeAsyncChain(
+            String poolName,
+            Supplier<T> firstTask,
+            java.util.function.Function<T, U> secondTask) {
+        ExecutorService executor = threadPools.get(poolName);
+        if (executor == null) {
+            throw new IllegalArgumentException("Thread pool not found: " + poolName);
+        }
+        return CompletableFuture
+                .supplyAsync(firstTask, executor)
+                .thenApplyAsync(secondTask, executor);
+    }
+
+    /**
+     * Gets monitoring information for a specific thread pool.
+     *
+     * @param poolName The name of the thread pool
+     * @return ThreadPoolMonitorInfo containing current status, or null if pool not found
+     */
+    public static ThreadPoolMonitorInfo getThreadPoolInfo(String poolName) {
+        ExecutorService executor = threadPools.get(poolName);
+        if (executor == null) {
+            return null;
+        }
+
+        if (executor instanceof ThreadPoolExecutor) {
+            ThreadPoolExecutor tpe = (ThreadPoolExecutor) executor;
+            return new ThreadPoolMonitorInfo(
+                poolName,
+                tpe.getActiveCount(),
+                tpe.getPoolSize(),
+                tpe.getMaximumPoolSize(),
+                tpe.getTaskCount(),
+                tpe.getCompletedTaskCount(),
+                tpe.getQueue().size(),
+                !tpe.isShutdown()
+            );
+        } else if (executor instanceof ScheduledThreadPoolExecutor) {
+            ScheduledThreadPoolExecutor stpe = (ScheduledThreadPoolExecutor) executor;
+            return new ThreadPoolMonitorInfo(
+                poolName,
+                stpe.getActiveCount(),
+                stpe.getPoolSize(),
+                stpe.getMaximumPoolSize(),
+                stpe.getTaskCount(),
+                stpe.getCompletedTaskCount(),
+                stpe.getQueue().size(),
+                !stpe.isShutdown()
+            );
+        } else {
+            // For other executor types, provide basic info
+            return new ThreadPoolMonitorInfo(
+                poolName,
+                -1, // Unknown active count
+                -1, // Unknown pool size
+                -1, // Unknown max pool size
+                -1, // Unknown task count
+                -1, // Unknown completed task count
+                -1, // Unknown queue size
+                !executor.isShutdown()
+            );
+        }
+    }
+
+    /**
+     * Gets monitoring information for all thread pools.
+     *
+     * @return Map of pool names to their monitoring information
+     */
+    public static Map<String, ThreadPoolMonitorInfo> getAllThreadPoolInfo() {
+        Map<String, ThreadPoolMonitorInfo> result = new HashMap<>();
+        for (String poolName : threadPools.keySet()) {
+            ThreadPoolMonitorInfo info = getThreadPoolInfo(poolName);
+            if (info != null) {
+                result.put(poolName, info);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Logs current status of all thread pools.
+     */
+    public static void logThreadPoolStatus() {
+        logger.info("=== Thread Pool Status ===");
+        Map<String, ThreadPoolMonitorInfo> allInfo = getAllThreadPoolInfo();
+
+        if (allInfo.isEmpty()) {
+            logger.info("No active thread pools");
+            return;
+        }
+
+        for (Map.Entry<String, ThreadPoolMonitorInfo> entry : allInfo.entrySet()) {
+            ThreadPoolMonitorInfo info = entry.getValue();
+            logger.info(String.format(
+                "Pool: %s | Active: %d | Pool Size: %d | Max: %d | Tasks: %d | Completed: %d | Queue: %d | Running: %s",
+                info.getPoolName(),
+                info.getActiveCount(),
+                info.getPoolSize(),
+                info.getMaxPoolSize(),
+                info.getTaskCount(),
+                info.getCompletedTaskCount(),
+                info.getQueueSize(),
+                info.isRunning()
+            ));
+        }
+        logger.info("=== End Thread Pool Status ===");
+    }
+
     /**
      * Registers a JVM shutdown hook to ensure all thread pools are properly shut down.
      */
@@ -220,7 +383,7 @@ public class ThreadManager {
             logger.info("JVM shutdown detected, shutting down all thread pools...");
             shutdownAllThreadPools();
         }));
-        
+
         logger.info("ThreadManager initialized with shutdown hook");
     }
 }

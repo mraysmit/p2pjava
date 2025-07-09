@@ -1,6 +1,11 @@
 package dev.mars.p2pjava;
 
 import dev.mars.p2pjava.circuit.CircuitBreaker;
+import dev.mars.p2pjava.discovery.ServiceRegistry;
+import dev.mars.p2pjava.discovery.DistributedServiceRegistry;
+import dev.mars.p2pjava.discovery.ServiceInstance;
+import dev.mars.p2pjava.discovery.ConflictResolutionStrategy;
+import dev.mars.p2pjava.config.PeerConfig;
 import dev.mars.p2pjava.util.HealthCheck;
 import dev.mars.p2pjava.util.RetryHelper;
 import dev.mars.p2pjava.util.ServiceMonitor;
@@ -44,6 +49,10 @@ public class Peer {
     // Service metrics for this peer
     private ServiceMonitor.ServiceMetrics metrics;
 
+    // Enhanced service registry for distributed peer discovery
+    private ServiceRegistry serviceRegistry;
+    private DistributedServiceRegistry distributedRegistry;
+
     public Peer(String peerId, String peerHost, int peerPort, String trackerHost, int trackerPort) {
         this.peerId = peerId;
         this.peerHost = peerHost;
@@ -78,6 +87,9 @@ public class Peer {
 
         // Initialize metrics
         this.metrics = ServiceMonitor.registerService("Peer-" + peerId);
+
+        // Initialize enhanced service registry
+        initializeEnhancedServiceRegistry();
 
         logger.info("Created peer " + peerId + " at " + peerHost + ":" + this.peerPort);
     }
@@ -151,11 +163,12 @@ public class Peer {
                 logger.info("Accept loop started");
                 return "acceptLoopStarted";
             },
-            // Second: Register with tracker
+            // Second: Register with service registry and tracker
             (acceptResult) -> {
+                registerWithServiceRegistryAsync().join(); // Register with distributed registry
                 registerWithTrackerAsync().join(); // Wait for completion
-                logger.info("Registered with tracker");
-                return "trackerRegistered";
+                logger.info("Registered with service registry and tracker");
+                return "registrationComplete";
             },
             // Third: Start heartbeat and signal completion
             (trackerResult) -> {
@@ -701,5 +714,167 @@ public class Peer {
 
     public String getPeerId() {
         return peerId;
+    }
+
+    /**
+     * Initializes the enhanced service registry for peer discovery.
+     */
+    private void initializeEnhancedServiceRegistry() {
+        try {
+            // Check if distributed registry is enabled
+            boolean useDistributed = Boolean.parseBoolean(
+                System.getProperty("peer.distributed.enabled", "true"));
+
+            if (useDistributed) {
+                // Create enhanced gossip configuration
+                PeerConfig.GossipConfig gossipConfig = new PeerConfig.GossipConfig();
+                gossipConfig.setPort(Integer.parseInt(System.getProperty("peer.gossip.port", "6004")));
+                gossipConfig.setAdaptiveFanout(true);
+                gossipConfig.setPriorityPropagation(true);
+                gossipConfig.setCompressionEnabled(true);
+                gossipConfig.setIntervalMs(Long.parseLong(System.getProperty("peer.gossip.interval", "5000")));
+
+                // Get bootstrap peers (typically trackers)
+                String bootstrapPeersStr = System.getProperty("peer.bootstrap.peers", "");
+                Set<String> bootstrapPeers = new HashSet<>();
+                if (!bootstrapPeersStr.isEmpty()) {
+                    bootstrapPeers.addAll(Arrays.asList(bootstrapPeersStr.split(",")));
+                }
+
+                // Create conflict resolution strategy
+                Map<String, Integer> peerPriorities = new HashMap<>();
+                peerPriorities.put("tracker", 100);
+                peerPriorities.put("indexserver", 50);
+                peerPriorities.put("peer", 10);
+
+                ConflictResolutionStrategy conflictResolver = new ConflictResolutionStrategy(
+                    ConflictResolutionStrategy.ResolutionPolicy.COMPOSITE,
+                    peerPriorities,
+                    service -> service.isHealthy()
+                );
+
+                // Create distributed registry
+                distributedRegistry = new DistributedServiceRegistry(
+                    peerId,
+                    gossipConfig.getPort(),
+                    bootstrapPeers
+                );
+
+                distributedRegistry.start();
+                serviceRegistry = distributedRegistry;
+
+                logger.info("Initialized enhanced distributed service registry on port " + gossipConfig.getPort());
+            } else {
+                // Use basic in-memory registry for local testing
+                serviceRegistry = dev.mars.p2pjava.discovery.InMemoryServiceRegistry.getInstance();
+                logger.info("Using basic in-memory service registry (distributed features disabled)");
+            }
+
+        } catch (Exception e) {
+            logger.warning("Failed to initialize enhanced service registry: " + e.getMessage());
+            // Fall back to basic registry
+            serviceRegistry = dev.mars.p2pjava.discovery.InMemoryServiceRegistry.getInstance();
+        }
+    }
+
+    /**
+     * Registers this peer with the distributed service registry.
+     */
+    private CompletableFuture<Void> registerWithServiceRegistryAsync() {
+        return CompletableFuture.runAsync(() -> {
+            if (serviceRegistry == null) {
+                logger.warning("Service registry not initialized, skipping peer registration");
+                return;
+            }
+
+            try {
+                // Create rich metadata for this peer
+                Map<String, String> metadata = new HashMap<>();
+                metadata.put("startTime", String.valueOf(System.currentTimeMillis()));
+                metadata.put("version", "2.0");
+                metadata.put("capabilities", "file-sharing,enhanced-discovery");
+                metadata.put("region", System.getProperty("peer.region", "default"));
+                metadata.put("fileCount", String.valueOf(sharedFiles.size()));
+                metadata.put("trackerHost", trackerHost);
+                metadata.put("trackerPort", String.valueOf(trackerPort));
+
+                boolean registered = serviceRegistry.registerService("peer", peerId, peerHost, peerPort, metadata);
+                if (registered) {
+                    logger.info("Successfully registered peer with distributed service registry: " + peerId);
+
+                    // Update health status
+                    health.setHealthy(true);
+                    health.addHealthDetail("serviceRegistryStatus", "registered");
+                } else {
+                    logger.warning("Failed to register peer with service registry");
+                    health.addHealthDetail("serviceRegistryStatus", "failed");
+                }
+
+            } catch (Exception e) {
+                logger.warning("Error registering peer with service registry: " + e.getMessage());
+                health.addHealthDetail("serviceRegistryStatus", "error: " + e.getMessage());
+            }
+        }, connectionExecutor);
+    }
+
+    /**
+     * Discovers other peers using the enhanced service registry.
+     */
+    public List<ServiceInstance> discoverPeers() {
+        if (serviceRegistry == null) {
+            logger.warning("Service registry not available for peer discovery");
+            return Collections.emptyList();
+        }
+
+        try {
+            List<ServiceInstance> allPeers = serviceRegistry.discoverServices("peer");
+            // Filter out this peer
+            return allPeers.stream()
+                .filter(peer -> !peerId.equals(peer.getServiceId()))
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.warning("Failed to discover peers: " + e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Discovers tracker instances using the service registry.
+     */
+    public List<ServiceInstance> discoverTrackers() {
+        if (serviceRegistry == null) {
+            return Collections.emptyList();
+        }
+
+        try {
+            return serviceRegistry.discoverServices("tracker");
+        } catch (Exception e) {
+            logger.warning("Failed to discover trackers: " + e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Updates peer metadata in the service registry.
+     */
+    public void updatePeerMetadata(String key, String value) {
+        if (serviceRegistry == null) {
+            return;
+        }
+
+        try {
+            ServiceInstance currentInstance = serviceRegistry.getService("peer", peerId);
+            if (currentInstance != null) {
+                Map<String, String> updatedMetadata = new HashMap<>(currentInstance.getMetadata());
+                updatedMetadata.put(key, value);
+                updatedMetadata.put("lastUpdated", String.valueOf(System.currentTimeMillis()));
+
+                // Re-register with updated metadata
+                serviceRegistry.registerService("peer", peerId, peerHost, peerPort, updatedMetadata);
+                logger.fine("Updated peer metadata: " + key + "=" + value);
+            }
+        } catch (Exception e) {
+            logger.warning("Failed to update peer metadata: " + e.getMessage());
+        }
     }
 }

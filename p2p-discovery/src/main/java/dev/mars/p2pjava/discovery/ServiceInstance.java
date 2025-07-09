@@ -1,12 +1,17 @@
 package dev.mars.p2pjava.discovery;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 /**
- * Represents a service instance in the service registry.
+ * Represents a service instance in the service registry with enhanced versioning support.
+ * Includes vector clocks for distributed conflict resolution and causality tracking.
  */
 public class ServiceInstance {
     private final String serviceType;
@@ -17,9 +22,12 @@ public class ServiceInstance {
     private boolean healthy;
     private long lastUpdated;
 
-    // Version information for distributed registry conflict resolution
+    // Enhanced version information for distributed registry conflict resolution
     private long version;
     private String originPeerId;
+    private VectorClock vectorClock;
+    private Instant createdAt;
+    private int priority;
 
     /**
      * Creates a new service instance.
@@ -40,6 +48,9 @@ public class ServiceInstance {
         this.lastUpdated = System.currentTimeMillis();
         this.version = System.currentTimeMillis(); // Use timestamp as initial version
         this.originPeerId = "local"; // Default origin peer
+        this.vectorClock = VectorClock.create("local");
+        this.createdAt = Instant.now();
+        this.priority = 0;
     }
 
     /**
@@ -64,6 +75,39 @@ public class ServiceInstance {
         this.lastUpdated = System.currentTimeMillis();
         this.version = version;
         this.originPeerId = originPeerId != null ? originPeerId : "unknown";
+        this.vectorClock = VectorClock.create(this.originPeerId);
+        this.createdAt = Instant.now();
+        this.priority = 0;
+    }
+
+    /**
+     * Creates a new service instance with full versioning information (JSON constructor).
+     */
+    @JsonCreator
+    public ServiceInstance(@JsonProperty("serviceType") String serviceType,
+                          @JsonProperty("serviceId") String serviceId,
+                          @JsonProperty("host") String host,
+                          @JsonProperty("port") int port,
+                          @JsonProperty("metadata") Map<String, String> metadata,
+                          @JsonProperty("version") long version,
+                          @JsonProperty("originPeerId") String originPeerId,
+                          @JsonProperty("vectorClock") VectorClock vectorClock,
+                          @JsonProperty("createdAt") Instant createdAt,
+                          @JsonProperty("priority") int priority,
+                          @JsonProperty("healthy") boolean healthy,
+                          @JsonProperty("lastUpdated") long lastUpdated) {
+        this.serviceType = serviceType;
+        this.serviceId = serviceId;
+        this.host = host;
+        this.port = port;
+        this.metadata = metadata != null ? new HashMap<>(metadata) : new HashMap<>();
+        this.healthy = healthy;
+        this.lastUpdated = lastUpdated > 0 ? lastUpdated : System.currentTimeMillis();
+        this.version = version;
+        this.originPeerId = originPeerId != null ? originPeerId : "unknown";
+        this.vectorClock = vectorClock != null ? vectorClock : VectorClock.create(this.originPeerId);
+        this.createdAt = createdAt != null ? createdAt : Instant.now();
+        this.priority = priority;
     }
 
     /**
@@ -134,13 +178,47 @@ public class ServiceInstance {
         this.originPeerId = originPeerId != null ? originPeerId : "unknown";
     }
 
+    @JsonProperty("vectorClock")
+    public VectorClock getVectorClock() {
+        return vectorClock;
+    }
+
+    public void setVectorClock(VectorClock vectorClock) {
+        this.vectorClock = vectorClock != null ? vectorClock : VectorClock.empty();
+    }
+
+    @JsonProperty("createdAt")
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    @JsonProperty("priority")
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
     /**
      * Creates a copy of this service instance with updated version information.
      * Used for distributed registry operations.
      */
     public ServiceInstance withVersion(long newVersion, String newOriginPeerId) {
         return new ServiceInstance(serviceType, serviceId, host, port,
-                                 new HashMap<>(metadata), newVersion, newOriginPeerId);
+                                 new HashMap<>(metadata), newVersion, newOriginPeerId,
+                                 vectorClock, createdAt, priority, healthy, lastUpdated);
+    }
+
+    /**
+     * Creates a copy with an incremented vector clock.
+     */
+    public ServiceInstance withIncrementedClock(String peerId) {
+        VectorClock newClock = vectorClock.increment(peerId);
+        return new ServiceInstance(serviceType, serviceId, host, port,
+                                 new HashMap<>(metadata), System.currentTimeMillis(), peerId,
+                                 newClock, createdAt, priority, healthy, System.currentTimeMillis());
     }
 
     /**
@@ -150,6 +228,22 @@ public class ServiceInstance {
     public boolean isNewerThan(ServiceInstance other) {
         if (other == null) return true;
         return this.version > other.version;
+    }
+
+    /**
+     * Determines causality relationship using vector clocks.
+     */
+    public boolean happensBefore(ServiceInstance other) {
+        if (other == null || other.vectorClock == null) return false;
+        return this.vectorClock.isBefore(other.vectorClock);
+    }
+
+    /**
+     * Determines if this instance is concurrent with another.
+     */
+    public boolean isConcurrentWith(ServiceInstance other) {
+        if (other == null || other.vectorClock == null) return false;
+        return this.vectorClock.isConcurrent(other.vectorClock);
     }
 
     @Override

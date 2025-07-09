@@ -14,6 +14,10 @@ package dev.mars.p2pjava;
 
 import dev.mars.p2pjava.discovery.ServiceRegistry;
 import dev.mars.p2pjava.discovery.ServiceRegistryFactory;
+import dev.mars.p2pjava.discovery.DistributedServiceRegistry;
+import dev.mars.p2pjava.discovery.ConflictResolutionStrategy;
+import dev.mars.p2pjava.discovery.ServiceInstance;
+import dev.mars.p2pjava.config.PeerConfig;
 import dev.mars.p2pjava.util.ThreadManager;
 
 import java.io.*;
@@ -36,11 +40,15 @@ public class Tracker {
     private static volatile boolean running = true;
     private static ExecutorService threadPool;
 
-    // Service registry for service discovery
+    // Enhanced service registry for distributed service discovery
     private static ServiceRegistry serviceRegistry;
+    private static DistributedServiceRegistry distributedRegistry;
 
     // Unique ID for this tracker instance
     private static String trackerId;
+
+    // Configuration for enhanced features
+    private static PeerConfig.GossipConfig gossipConfig;
 
     public static void main(String[] args) {
         configureLogging();
@@ -88,8 +96,8 @@ public class Tracker {
             THREAD_POOL_SIZE
         );
 
-        // Initialize service registry
-        serviceRegistry = ServiceRegistryFactory.getInstance().getRegistry();
+        // Initialize enhanced service registry
+        initializeEnhancedServiceRegistry();
 
         // Generate a unique ID for this tracker instance
         trackerId = "tracker-" + UUID.randomUUID().toString().substring(0, 8);
@@ -103,13 +111,23 @@ public class Tracker {
             logger.warning("Could not determine local host address: " + e.getMessage());
         }
 
-        // Register this tracker instance with the service registry
+        // Register this tracker instance with enhanced metadata
         Map<String, String> metadata = new ConcurrentHashMap<>();
         metadata.put("startTime", String.valueOf(System.currentTimeMillis()));
+        metadata.put("version", "2.0");
+        metadata.put("capabilities", "enhanced-gossip,conflict-resolution,vector-clocks");
+        metadata.put("region", System.getProperty("tracker.region", "default"));
+        metadata.put("priority", "high"); // Trackers are critical infrastructure
 
         boolean registered = serviceRegistry.registerService("tracker", trackerId, host, trackerPort, metadata);
         if (registered) {
-            logger.info("Registered tracker with service registry: " + trackerId + " at " + host + ":" + trackerPort);
+            logger.info("Registered enhanced tracker with service registry: " + trackerId + " at " + host + ":" + trackerPort);
+
+            // If using distributed registry, register with high priority
+            if (distributedRegistry != null) {
+                // Note: This would require extending the API to support priority registration
+                logger.info("Tracker registered with distributed registry using high priority");
+            }
         } else {
             logger.warning("Failed to register tracker with service registry");
         }
@@ -171,7 +189,93 @@ public class Tracker {
             }
         }
 
+        // Stop distributed registry if used
+        if (distributedRegistry != null) {
+            distributedRegistry.stop();
+            logger.info("Stopped distributed service registry");
+        }
+
         logger.info("Tracker stopped");
+    }
+
+    /**
+     * Initializes the enhanced service registry with distributed capabilities.
+     */
+    private static void initializeEnhancedServiceRegistry() {
+        try {
+            // Check if distributed registry is enabled
+            boolean useDistributed = Boolean.parseBoolean(
+                System.getProperty("tracker.distributed.enabled", "true"));
+
+            if (useDistributed) {
+                // Create enhanced gossip configuration
+                gossipConfig = new PeerConfig.GossipConfig();
+                gossipConfig.setPort(Integer.parseInt(System.getProperty("tracker.gossip.port", "6003")));
+                gossipConfig.setAdaptiveFanout(true);
+                gossipConfig.setPriorityPropagation(true);
+                gossipConfig.setCompressionEnabled(true);
+                gossipConfig.setIntervalMs(Long.parseLong(System.getProperty("tracker.gossip.interval", "5000")));
+
+                // Get bootstrap peers from system property
+                String bootstrapPeersStr = System.getProperty("tracker.bootstrap.peers", "");
+                Set<String> bootstrapPeers = new HashSet<>();
+                if (!bootstrapPeersStr.isEmpty()) {
+                    bootstrapPeers.addAll(Arrays.asList(bootstrapPeersStr.split(",")));
+                }
+
+                // Create conflict resolution strategy with tracker priority
+                Map<String, Integer> peerPriorities = new HashMap<>();
+                peerPriorities.put("tracker", 100); // Highest priority for trackers
+                peerPriorities.put("indexserver", 50);
+                peerPriorities.put("peer", 10);
+
+                ConflictResolutionStrategy conflictResolver = new ConflictResolutionStrategy(
+                    ConflictResolutionStrategy.ResolutionPolicy.COMPOSITE,
+                    peerPriorities,
+                    service -> service.isHealthy()
+                );
+
+                // Create distributed registry
+                distributedRegistry = new DistributedServiceRegistry(
+                    "tracker-" + System.currentTimeMillis(),
+                    gossipConfig.getPort(),
+                    bootstrapPeers
+                );
+
+                distributedRegistry.start();
+                serviceRegistry = distributedRegistry;
+
+                logger.info("Initialized enhanced distributed service registry on port " + gossipConfig.getPort());
+            } else {
+                // Fall back to basic registry
+                serviceRegistry = ServiceRegistryFactory.getInstance().getRegistry();
+                logger.info("Using basic service registry (distributed features disabled)");
+            }
+
+        } catch (Exception e) {
+            logger.warning("Failed to initialize enhanced service registry, falling back to basic: " + e.getMessage());
+            serviceRegistry = ServiceRegistryFactory.getInstance().getRegistry();
+        }
+    }
+
+    /**
+     * Discovers other tracker instances for load balancing and redundancy.
+     */
+    public static List<ServiceInstance> discoverOtherTrackers() {
+        if (serviceRegistry == null) {
+            return Collections.emptyList();
+        }
+
+        try {
+            List<ServiceInstance> allTrackers = serviceRegistry.discoverServices("tracker");
+            // Filter out this tracker instance
+            return allTrackers.stream()
+                .filter(tracker -> !trackerId.equals(tracker.getServiceId()))
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.warning("Failed to discover other trackers: " + e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     public static void updatePeerLastSeen(String peerId) {

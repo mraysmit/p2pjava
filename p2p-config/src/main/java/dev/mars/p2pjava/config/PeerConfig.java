@@ -128,33 +128,111 @@ public class PeerConfig {
     public static class DiscoveryConfig {
         @JsonProperty("enabled")
         private boolean enabled = true;
-        
+
         @JsonProperty("broadcastPort")
         private int broadcastPort = 6002;
-        
+
         @JsonProperty("discoveryIntervalMs")
         private long discoveryIntervalMs = 60000;
-        
+
         @JsonProperty("maxPeers")
         private int maxPeers = 50;
-        
+
         @JsonProperty("bootstrapPeers")
         private String[] bootstrapPeers = {};
-        
+
+        @JsonProperty("gossip")
+        private GossipConfig gossip = new GossipConfig();
+
         // Getters and setters
         public boolean isEnabled() { return enabled; }
         public void setEnabled(boolean enabled) { this.enabled = enabled; }
-        
+
         public int getBroadcastPort() { return broadcastPort; }
         public void setBroadcastPort(int broadcastPort) { this.broadcastPort = broadcastPort; }
-        
+
         public long getDiscoveryIntervalMs() { return discoveryIntervalMs; }
         public void setDiscoveryIntervalMs(long discoveryIntervalMs) { this.discoveryIntervalMs = discoveryIntervalMs; }
-        
+
         public int getMaxPeers() { return maxPeers; }
         public void setMaxPeers(int maxPeers) { this.maxPeers = maxPeers; }
-        
+
         public String[] getBootstrapPeers() { return bootstrapPeers; }
         public void setBootstrapPeers(String[] bootstrapPeers) { this.bootstrapPeers = bootstrapPeers; }
+
+        public GossipConfig getGossip() { return gossip; }
+        public void setGossip(GossipConfig gossip) { this.gossip = gossip; }
+    }
+
+    /**
+     * Enhanced gossip protocol configuration for efficient service propagation
+     */
+    public static class GossipConfig {
+        @JsonProperty("enabled")
+        private boolean enabled = true;
+
+        @JsonProperty("port")
+        private int port = 6003;
+
+        @JsonProperty("intervalMs")
+        private long intervalMs = 5000;
+
+        @JsonProperty("fanout")
+        private int fanout = 3;
+
+        @JsonProperty("messageTtlMs")
+        private long messageTtlMs = 30000;
+
+        @JsonProperty("maxHops")
+        private int maxHops = 10;
+
+        @JsonProperty("adaptiveFanout")
+        private boolean adaptiveFanout = true;
+
+        @JsonProperty("priorityPropagation")
+        private boolean priorityPropagation = true;
+
+        @JsonProperty("compressionEnabled")
+        private boolean compressionEnabled = true;
+
+        @JsonProperty("batchSize")
+        private int batchSize = 10;
+
+        @JsonProperty("antiEntropyIntervalMs")
+        private long antiEntropyIntervalMs = 60000;
+
+        // Getters and setters
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+
+        public int getPort() { return port; }
+        public void setPort(int port) { this.port = port; }
+
+        public long getIntervalMs() { return intervalMs; }
+        public void setIntervalMs(long intervalMs) { this.intervalMs = intervalMs; }
+
+        public int getFanout() { return fanout; }
+        public void setFanout(int fanout) { this.fanout = fanout; }
+
+        public long getMessageTtlMs() { return messageTtlMs; }
+        public void setMessageTtlMs(long messageTtlMs) { this.messageTtlMs = messageTtlMs; }
+
+        public int getMaxHops() { return maxHops; }
+        public void setMaxHops(int maxHops) { this.maxHops = maxHops; }
+
+        public boolean isAdaptiveFanout() { return adaptiveFanout; }
+        public void setAdaptiveFanout(boolean adaptiveFanout) { this.adaptiveFanout = adaptiveFanout; }
+
+        public boolean isPriorityPropagation() { return priorityPropagation; }
+        public void setPriorityPropagation(boolean priorityPropagation) { this.priorityPropagation = priorityPropagation; }
+
+        public boolean isCompressionEnabled() { return compressionEnabled; }
+        public void setCompressionEnabled(boolean compressionEnabled) { this.compressionEnabled = compressionEnabled; }
+
+        public int getBatchSize() { return batchSize; }
+        public void setBatchSize(int batchSize) { this.batchSize = batchSize; }
+
+        public long getAntiEntropyIntervalMs() { return antiEntropyIntervalMs; }
+        public void setAntiEntropyIntervalMs(long antiEntropyIntervalMs) { this.antiEntropyIntervalMs = antiEntropyIntervalMs; }
     }
 }

@@ -37,7 +37,7 @@ public class ServiceException extends P2PException {
      */
     public static class RateLimitedException extends P2PException {
         public RateLimitedException(String message, long retryAfterMs) {
-            super(message, ErrorMessage.ErrorCodes.RATE_LIMITED,
+            super(message, null, ErrorMessage.ErrorCodes.RATE_LIMITED,
                   ErrorCategory.RATE_LIMIT_ERROR, RecoveryStrategy.RETRY_EXPONENTIAL_JITTER, true, retryAfterMs);
         }
     }

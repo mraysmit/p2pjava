@@ -8,7 +8,7 @@
         <artifactId>p2p-java</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>p2p-util</artifactId>
+    <artifactId>p2p-monitoring</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
         <maven.compiler.source>23</maven.compiler.source>
@@ -16,21 +16,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>dev.mars</groupId>
-            <artifactId>p2p-common-api</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.mars</groupId>
-            <artifactId>p2p-monitoring</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.mars</groupId>
-            <artifactId>p2p-circuit</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -52,14 +37,6 @@
                         <arg>--add-modules</arg>
                         <arg>java.logging</arg>
                     </compilerArgs>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <mainClass>dev.mars.p2pjava.util.ThreadManagementDemo</mainClass>
                 </configuration>
             </plugin>
         </plugins>

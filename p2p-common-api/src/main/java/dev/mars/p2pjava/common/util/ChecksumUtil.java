@@ -1,4 +1,4 @@
-package dev.mars.p2pjava.util;
+package dev.mars.p2pjava.common.util;
 
 import java.io.*;
 import java.nio.file.Files;

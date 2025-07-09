@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import dev.mars.p2pjava.util.ChecksumUtil;
+import dev.mars.p2pjava.common.util.ChecksumUtil;
 
 /**
  * Represents metadata about a file in the P2P network.

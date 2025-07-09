@@ -1,7 +1,7 @@
 package dev.mars.p2pjava.circuit;
 
 import dev.mars.p2pjava.common.exception.ServiceException;
-import dev.mars.p2pjava.util.ServiceMonitor;
+import dev.mars.p2pjava.monitoring.ServiceMonitor;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;

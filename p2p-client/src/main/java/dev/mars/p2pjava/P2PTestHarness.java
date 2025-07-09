@@ -7,6 +7,7 @@ import dev.mars.p2pjava.cache.CacheManager;
 import dev.mars.p2pjava.common.PeerInfo;
 import dev.mars.p2pjava.config.ConfigurationManager;
 import dev.mars.p2pjava.connection.ConnectionPool;
+import dev.mars.p2pjava.discovery.ServiceInstance;
 import dev.mars.p2pjava.discovery.ServiceRegistry;
 import dev.mars.p2pjava.health.HealthCheckServer;
 import dev.mars.p2pjava.storage.FileIndexStorage;
@@ -127,8 +128,26 @@ public class P2PTestHarness {
         HealthCheck.ServiceHealth health = HealthCheck.registerService("P2PTestHarness");
         health.addHealthDetail("startTime", System.currentTimeMillis());
 
-        // Initialize P2P client with configuration
-        p2pClient = new P2PClient(configManager);
+        // Check if distributed discovery is enabled
+        boolean useDistributedDiscovery = configManager.getBoolean("serviceRegistry.distributed.enabled", false);
+
+        if (useDistributedDiscovery) {
+            System.out.println("=== DISTRIBUTED SERVICE DISCOVERY MODE ===");
+            System.out.println("Using distributed service registry with gossip protocol");
+
+            // Initialize distributed P2P client
+            DistributedP2PClient distributedClient = new DistributedP2PClient(configManager);
+
+            // Test distributed discovery
+            testDistributedDiscovery(distributedClient);
+            return;
+        } else {
+            System.out.println("=== CENTRALIZED MODE ===");
+            System.out.println("Using centralized Tracker/IndexServer");
+
+            // Initialize P2P client with configuration
+            p2pClient = new P2PClient(configManager);
+        }
 
         // Create thread pool using ThreadManager
         ExecutorService executorService = ThreadManager.getCachedThreadPool(
@@ -688,5 +707,104 @@ public class P2PTestHarness {
         Files.writeString(Paths.get("files/peer1/file2.txt"), "This is file 2 content");
         Files.writeString(Paths.get("files/peer2/file3.txt"), "This is file 3 content");
         Files.writeString(Paths.get("files/peer2/file4.txt"), "This is file 4 content");
+    }
+
+    /**
+     * Tests distributed service discovery functionality.
+     */
+    private static void testDistributedDiscovery(DistributedP2PClient distributedClient) {
+        System.out.println("\n=== Testing Distributed Service Discovery ===");
+
+        try {
+            // Wait for gossip network to establish
+            System.out.println("Waiting for gossip network to establish...");
+            Thread.sleep(3000);
+
+            // Register a test file service
+            String testFile = "test-distributed-file.txt";
+            String serviceId = "test-service-" + System.currentTimeMillis();
+
+            System.out.println("Registering file service for: " + testFile);
+            boolean registered = distributedClient.registerFileService(
+                serviceId,
+                "localhost",
+                8080,
+                testFile,
+                Map.of("description", "Test file for distributed discovery", "size", "1024")
+            );
+
+            if (registered) {
+                System.out.println("✓ Service registered successfully");
+            } else {
+                recordFailure("Failed to register test service", null);
+                return;
+            }
+
+            // Wait for gossip propagation
+            System.out.println("Waiting for gossip propagation...");
+            Thread.sleep(5000);
+
+            // Test service discovery
+            System.out.println("Discovering all file-sharing services...");
+            List<ServiceInstance> services = distributedClient.discoverServices("file-sharing");
+
+            System.out.println("Found " + services.size() + " file-sharing services:");
+            for (ServiceInstance service : services) {
+                System.out.println("  - Service: " + service.getServiceId());
+                System.out.println("    Host: " + service.getHost() + ":" + service.getPort());
+                System.out.println("    File: " + service.getMetadata().get("file"));
+                System.out.println("    Origin: " + service.getOriginPeerId());
+                System.out.println("    ---");
+            }
+
+            // Test peer discovery for specific file
+            System.out.println("Searching for peers with file: " + testFile);
+            List<PeerInfo> peersWithFile = distributedClient.discoverPeersWithFile(testFile);
+
+            System.out.println("Found " + peersWithFile.size() + " peers with file " + testFile + ":");
+            for (PeerInfo peer : peersWithFile) {
+                System.out.println("  - Peer: " + peer.getPeerId() + " at " +
+                                 peer.getAddress() + ":" + peer.getPort());
+            }
+
+            if (peersWithFile.size() > 0) {
+                System.out.println("✓ Distributed service discovery working correctly");
+            } else {
+                recordFailure("No peers found with registered file", null);
+            }
+
+            // Test deregistration
+            System.out.println("Deregistering service...");
+            boolean deregistered = distributedClient.deregisterFileService(serviceId);
+
+            if (deregistered) {
+                System.out.println("✓ Service deregistered successfully");
+            } else {
+                recordFailure("Failed to deregister service", null);
+            }
+
+            // Wait and verify service is gone
+            Thread.sleep(2000);
+            List<ServiceInstance> servicesAfter = distributedClient.discoverServices("file-sharing");
+            System.out.println("Services after deregistration: " + servicesAfter.size());
+
+            System.out.println("\n=== Distributed Discovery Test Complete ===");
+
+            // Report results
+            if (testFailures.isEmpty()) {
+                System.out.println("🎉 All distributed discovery tests passed!");
+            } else {
+                System.err.println("❌ Test failures (" + testFailures.size() + "):");
+                for (String failure : testFailures) {
+                    System.err.println("  - " + failure);
+                }
+            }
+
+        } catch (Exception e) {
+            recordFailure("Distributed discovery test failed", e);
+        } finally {
+            // Cleanup
+            distributedClient.shutdown();
+        }
     }
 }

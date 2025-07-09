@@ -1,4 +1,4 @@
-package dev.mars.p2pjava.util;
+package dev.mars.p2pjava.monitoring;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

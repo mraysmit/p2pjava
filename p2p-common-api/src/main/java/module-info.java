@@ -8,4 +8,5 @@ module p2p.common.api {
     exports dev.mars.p2pjava.common.protocol;
     exports dev.mars.p2pjava.common.exception;
     exports dev.mars.p2pjava.common.util;
+    exports dev.mars.p2pjava.common;
 }

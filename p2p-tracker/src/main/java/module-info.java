@@ -10,8 +10,11 @@ module dev.mars.p2ptracker {
 
     requires java.net.http; // For HTTP client functionality
 
+    // Require the p2p-common-api module for PeerInfo
+    requires p2p.common.api;
+
     // Require the p2p-discovery module
-    requires dev.mars.p2pdiscovery;
+    requires p2p.discovery;
 
     // Require the p2p-util module for ThreadManager
     requires p2p.util;

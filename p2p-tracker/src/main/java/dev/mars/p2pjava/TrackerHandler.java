@@ -1,5 +1,7 @@
 package dev.mars.p2pjava;
 
+import dev.mars.p2pjava.common.PeerInfo;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;

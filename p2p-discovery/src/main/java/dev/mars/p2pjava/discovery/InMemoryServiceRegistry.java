@@ -33,6 +33,14 @@ public class InMemoryServiceRegistry implements ServiceRegistry {
     }
 
     /**
+     * Public constructor for dependency injection.
+     * Creates a new instance that is not part of the singleton pattern.
+     */
+    public InMemoryServiceRegistry(boolean newInstance) {
+        // This constructor allows creating new instances for dependency injection
+    }
+
+    /**
      * Gets the singleton instance of the registry using double-checked locking
      * for thread safety.
      *

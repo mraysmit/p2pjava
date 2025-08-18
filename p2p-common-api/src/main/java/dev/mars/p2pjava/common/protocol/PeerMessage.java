@@ -6,22 +6,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * Base class for peer-to-peer messages.
+ * This class is now concrete to avoid Jackson deserialization issues.
  */
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "action"
-)
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = PeerMessage.FileRequest.class, name = "fileRequest"),
-    @JsonSubTypes.Type(value = PeerMessage.FileResponse.class, name = "fileResponse"),
-    @JsonSubTypes.Type(value = PeerMessage.FileTransferStart.class, name = "fileTransferStart"),
-    @JsonSubTypes.Type(value = PeerMessage.FileTransferComplete.class, name = "fileTransferComplete"),
-    @JsonSubTypes.Type(value = PeerMessage.FileTransferError.class, name = "fileTransferError"),
-    @JsonSubTypes.Type(value = PeerMessage.PingRequest.class, name = "ping"),
-    @JsonSubTypes.Type(value = PeerMessage.PongResponse.class, name = "pong")
-})
-public abstract class PeerMessage extends JsonMessage {
+public class PeerMessage extends JsonMessage {
     
     @JsonProperty("action")
     private String action;
@@ -42,6 +29,12 @@ public abstract class PeerMessage extends JsonMessage {
     
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
+
+    @Override
+    public boolean isValid() {
+        // Base validation - subclasses can override for specific validation
+        return action != null && !action.trim().isEmpty();
+    }
     
     /**
      * File request message.

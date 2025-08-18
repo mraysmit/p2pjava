@@ -15,8 +15,9 @@ import java.util.UUID;
  */
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "messageType"
+    include = JsonTypeInfo.As.EXISTING_PROPERTY,
+    property = "messageType",
+    visible = true
 )
 @JsonSubTypes({
     @JsonSubTypes.Type(value = TrackerMessage.class, name = "tracker"),
@@ -65,6 +66,16 @@ public abstract class JsonMessage {
         this();
         this.senderId = senderId;
         this.receiverId = receiverId;
+    }
+
+    /**
+     * Constructor with sender, receiver, and messageType (for JSON deserialization).
+     */
+    protected JsonMessage(String senderId, String receiverId, String messageType) {
+        this();
+        this.senderId = senderId;
+        this.receiverId = receiverId;
+        // messageType is handled by subclasses via getMessageType()
     }
     
     /**

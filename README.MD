@@ -87,6 +87,7 @@ The system is organized into **16 Maven modules** across four architectural laye
 - [Technical Architecture Guide](docs/TECHNICAL_ARCHITECTURE_GUIDE.md) - Deep dive into system design
 - [Bootstrap Guide](docs/BOOTSTRAP_GUIDE.md) - Component lifecycle management
 - [User Guide](docs/USER_GUIDE.md) - End-user documentation
+- [Configuration Guide](config/README.md) - Configuration files and examples
 
 ## 🏗️ Building and Testing
 
@@ -123,7 +124,7 @@ docker build -f p2p-indexserver/Dockerfile.index -t p2p-indexserver .
 
 - **Logs**: Check `logs/` directory for peer activity logs
 - **Monitoring**: Built-in metrics collection and health endpoints
-- **Configuration**: Customize via `test-distributed.properties` and `test-p2p-harness.properties`
+- **Configuration**: Customize via `config/test-distributed.properties` and `config/test-p2p-harness.properties`
 
 ## 🤝 Contributing
 

@@ -1,5 +1,7 @@
 # P2P Java User Guide
 
+#### © Mark Andrew Ray-Smith Cityline Ltd 2025
+
 ## Introduction
 
 This comprehensive user guide covers all aspects of using P2P Java, from basic peer-to-peer operations to advanced distributed system features. The guide is organized to take you from fundamental concepts through to expert-level usage.

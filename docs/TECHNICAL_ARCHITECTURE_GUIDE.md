@@ -1,5 +1,7 @@
 # P2P Java Technical Architecture Guide
 
+#### © Mark Andrew Ray-Smith Cityline Ltd 2025
+
 ## System Overview
 
 P2P Java is a modern, enterprise-grade peer-to-peer distributed system built with Java 23. The architecture follows dependency injection principles, implements comprehensive error handling, and supports both centralized and distributed service discovery patterns.

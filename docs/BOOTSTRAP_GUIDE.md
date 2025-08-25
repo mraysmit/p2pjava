@@ -1,5 +1,7 @@
 # P2P Java Bootstrap Guide
 
+#### © Mark Andrew Ray-Smith Cityline Ltd 2025
+
 ## Overview
 
 The P2P Java bootstrap system provides automated component lifecycle management with dependency resolution, health monitoring, and graceful shutdown capabilities. This guide covers everything from basic startup to advanced production deployment scenarios.

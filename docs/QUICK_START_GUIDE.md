@@ -1,5 +1,7 @@
 # P2P Java Quick Start Guide
 
+#### © Mark Andrew Ray-Smith Cityline Ltd 2025
+
 ## Overview
 
 P2P Java is a comprehensive peer-to-peer distributed system built with modern Java architecture. This guide will get you up and running quickly with the essential features.

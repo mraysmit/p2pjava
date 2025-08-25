@@ -26,23 +26,9 @@ import java.util.Map;
 
 /**
  * Base class for index server-related messages.
+ * This class is now concrete to avoid Jackson deserialization issues.
  */
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "action"
-)
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = IndexServerMessage.RegisterFileRequest.class, name = "registerFile"),
-    @JsonSubTypes.Type(value = IndexServerMessage.UnregisterFileRequest.class, name = "unregisterFile"),
-    @JsonSubTypes.Type(value = IndexServerMessage.GetPeersWithFileRequest.class, name = "getPeersWithFile"),
-    @JsonSubTypes.Type(value = IndexServerMessage.SearchFilesRequest.class, name = "searchFiles"),
-    @JsonSubTypes.Type(value = IndexServerMessage.RegisterFileResponse.class, name = "registerFileResponse"),
-    @JsonSubTypes.Type(value = IndexServerMessage.UnregisterFileResponse.class, name = "unregisterFileResponse"),
-    @JsonSubTypes.Type(value = IndexServerMessage.GetPeersWithFileResponse.class, name = "getPeersWithFileResponse"),
-    @JsonSubTypes.Type(value = IndexServerMessage.SearchFilesResponse.class, name = "searchFilesResponse")
-})
-public abstract class IndexServerMessage extends JsonMessage {
+public class IndexServerMessage extends JsonMessage {
     
     @JsonProperty("action")
     private String action;
@@ -63,6 +49,12 @@ public abstract class IndexServerMessage extends JsonMessage {
     
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
+
+    @Override
+    public boolean isValid() {
+        // Base validation - subclasses can override for specific validation
+        return action != null && !action.trim().isEmpty();
+    }
     
     /**
      * Register file request message.

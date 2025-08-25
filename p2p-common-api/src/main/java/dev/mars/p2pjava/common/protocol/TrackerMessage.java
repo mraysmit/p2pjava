@@ -20,28 +20,15 @@ package dev.mars.p2pjava.common.protocol;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 import java.util.List;
 
 /**
  * Base class for tracker-related messages.
+ * This class is now concrete to avoid Jackson deserialization issues.
  */
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "action"
-)
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = TrackerMessage.RegisterRequest.class, name = "register"),
-    @JsonSubTypes.Type(value = TrackerMessage.DeregisterRequest.class, name = "deregister"),
-    @JsonSubTypes.Type(value = TrackerMessage.DiscoverRequest.class, name = "discover"),
-    @JsonSubTypes.Type(value = TrackerMessage.IsAliveRequest.class, name = "isAlive"),
-    @JsonSubTypes.Type(value = TrackerMessage.RegisterResponse.class, name = "registerResponse"),
-    @JsonSubTypes.Type(value = TrackerMessage.DeregisterResponse.class, name = "deregisterResponse"),
-    @JsonSubTypes.Type(value = TrackerMessage.DiscoverResponse.class, name = "discoverResponse"),
-    @JsonSubTypes.Type(value = TrackerMessage.IsAliveResponse.class, name = "isAliveResponse")
-})
-public abstract class TrackerMessage extends JsonMessage {
+public class TrackerMessage extends JsonMessage {
     
     @JsonProperty("action")
     private String action;
@@ -49,9 +36,21 @@ public abstract class TrackerMessage extends JsonMessage {
     protected TrackerMessage() {
         super();
     }
-    
+
     protected TrackerMessage(String senderId, String receiverId, String action) {
         super(senderId, receiverId);
+        this.action = action;
+    }
+
+    /**
+     * JSON Creator constructor for proper deserialization.
+     */
+    @JsonCreator
+    protected TrackerMessage(@JsonProperty("senderId") String senderId,
+                           @JsonProperty("receiverId") String receiverId,
+                           @JsonProperty("messageType") String messageType,
+                           @JsonProperty("action") String action) {
+        super(senderId, receiverId, messageType);
         this.action = action;
     }
     
@@ -62,6 +61,58 @@ public abstract class TrackerMessage extends JsonMessage {
     
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
+
+    @Override
+    public boolean isValid() {
+        // Base validation - subclasses can override for specific validation
+        return action != null && !action.trim().isEmpty();
+    }
+
+    /**
+     * Factory method to create the appropriate TrackerMessage subclass based on action.
+     * This is used during JSON deserialization to create the correct concrete type.
+     */
+    public static TrackerMessage createFromAction(String action, String senderId, String receiverId) {
+        if (action == null) {
+            return new TrackerMessage(senderId, receiverId, "unknown");
+        }
+
+        TrackerMessage message;
+        switch (action) {
+            case "register":
+                message = new RegisterRequest();
+                break;
+            case "registerResponse":
+                message = new RegisterResponse();
+                break;
+            case "deregister":
+                message = new DeregisterRequest();
+                break;
+            case "deregisterResponse":
+                message = new DeregisterResponse();
+                break;
+            case "discover":
+                message = new DiscoverRequest();
+                break;
+            case "discoverResponse":
+                message = new DiscoverResponse();
+                break;
+            case "isAlive":
+                message = new IsAliveRequest();
+                break;
+            case "isAliveResponse":
+                message = new IsAliveResponse();
+                break;
+            default:
+                message = new TrackerMessage(senderId, receiverId, action);
+                return message;
+        }
+
+        // Set common properties for subclasses
+        message.setSenderId(senderId);
+        message.setReceiverId(receiverId);
+        return message;
+    }
     
     /**
      * Register peer request message.
@@ -83,6 +134,20 @@ public abstract class TrackerMessage extends JsonMessage {
         
         public RegisterRequest(String senderId, String peerId, String host, int port) {
             super(senderId, "tracker", "register");
+            this.peerId = peerId;
+            this.host = host;
+            this.port = port;
+        }
+
+        @JsonCreator
+        public RegisterRequest(@JsonProperty("senderId") String senderId,
+                             @JsonProperty("receiverId") String receiverId,
+                             @JsonProperty("messageType") String messageType,
+                             @JsonProperty("action") String action,
+                             @JsonProperty("peerId") String peerId,
+                             @JsonProperty("host") String host,
+                             @JsonProperty("port") int port) {
+            super(senderId, receiverId, messageType, action);
             this.peerId = peerId;
             this.host = host;
             this.port = port;

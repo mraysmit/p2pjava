@@ -20,6 +20,7 @@ package dev.mars.p2pjava.common.protocol;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
@@ -64,18 +65,25 @@ public class JsonMessageSerializer {
      */
     private ObjectMapper createObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        
+
         // Register Java 8 time module for Instant serialization
         mapper.registerModule(new JavaTimeModule());
-        
+
+        // Register custom deserializers
+        SimpleModule customModule = new SimpleModule();
+        customModule.addDeserializer(TrackerMessage.class, new TrackerMessageDeserializer());
+        customModule.addDeserializer(IndexServerMessage.class, new IndexServerMessageDeserializer());
+        customModule.addDeserializer(PeerMessage.class, new PeerMessageDeserializer());
+        mapper.registerModule(customModule);
+
         // Configure serialization features
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        
+
         // Configure deserialization features
         mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
-        
+
         return mapper;
     }
     
